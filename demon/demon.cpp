@@ -52,19 +52,19 @@ void thresh_callback(int,void*)
     vector<Vec4i> hierarchy;
     Mat roi2 = src_gray(Rect(15,50,70,19));
     int w = 17;
-    Mat roiA = src_gray(Rect(15,50,w,19));
-    Mat roiB = src_gray(Rect(15+w,50,w,19));
-    Mat roiC = src_gray(Rect(15+w+w,50,w,19));
-    Mat roiD = src_gray(Rect(15+w+w+w,50,w,19));
-    imshow("roiA",roiA);
-    imshow("roiB",roiB);
-    imshow("roiC",roiC);
-    imshow("roiD",roiD);
+    //Mat roiA = src_gray(Rect(15,50,w,19));
+    //Mat roiB = src_gray(Rect(15+w,50,w,19));
+    //Mat roiC = src_gray(Rect(15+w+w,50,w,19));
+    //Mat roiD = src_gray(Rect(15+w+w+w,50,w,19));
+    //imshow("roiA",roiA);
+    //imshow("roiB",roiB);
+    //imshow("roiC",roiC);
+    //imshow("roiD",roiD);§ó§ï£¾
     
-    threshold(roiA,roiA,165,255,THRESH_BINARY);
+    /*threshold(roiA,roiA,165,255,THRESH_BINARY);
     threshold(roiB,roiB,165,255,THRESH_BINARY);
     threshold(roiC,roiC,165,255,THRESH_BINARY);
-    threshold(roiD,roiD,165,255,THRESH_BINARY);
+    threshold(roiD,roiD,165,255,THRESH_BINARY);*/
     
 //    imwrite("D:\sampleA.jpg",roiA);
 //    imwrite("D:\sampleB.jpg",roiB);

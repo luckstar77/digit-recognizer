@@ -323,3 +323,6 @@ __pycache__/
 # Other
 *.xcodeproj
 *.sdf
+*.sln
+*.vcxproj
+*.filters

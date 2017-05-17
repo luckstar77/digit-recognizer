@@ -8,24 +8,24 @@
 using namespace cv;
 using namespace std;
 
-Mat src, src_gray,dst;
-Mat erosion_dst,dilation_dst;
+Mat src, src_gray, dst;
+Mat erosion_dst, dilation_dst;
 
 
 int thresh = 150;
-int max_thresh=255;
+int max_thresh = 255;
 RNG rag(12345);
 
-int morph_elem =2;
+int morph_elem = 2;
 int morph_size = 15;
 int morph_operator = 3;
-int const max_operator=4;
+int const max_operator = 4;
 
 const char* window_name = "Morphology Transformations Demo";
 
-void thresh_callback(int,void*);
+void thresh_callback(int, void*);
 
-int main(int argc,char** argv)
+int main(int argc, char** argv)
 {
     src = imread(argv[1], CV_LOAD_IMAGE_COLOR);
     if(!src.data)
@@ -44,13 +44,13 @@ int main(int argc,char** argv)
 }
 
 
-void thresh_callback(int,void*)
+void thresh_callback(int, void*)
 {
     Mat canny_output;
     vector<vector<Point>>contours;
     
     vector<Vec4i> hierarchy;
-    Mat roi2 = src_gray(Rect(15,50,70,19));
+    Mat roi2 = src_gray(Rect(15, 50, 70, 19));
     int w = 17;
     //Mat roiA = src_gray(Rect(15,50,w,19));
     //Mat roiB = src_gray(Rect(15+w,50,w,19));

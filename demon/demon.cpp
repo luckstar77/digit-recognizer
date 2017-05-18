@@ -52,19 +52,19 @@ void thresh_callback(int, void*)
     vector<Vec4i> hierarchy;
     Mat roi2 = src_gray(Rect(15, 50, 70, 19));
     int w = 17;
-    //Mat roiA = src_gray(Rect(15,50,w,19));
-    //Mat roiB = src_gray(Rect(15+w,50,w,19));
-    //Mat roiC = src_gray(Rect(15+w+w,50,w,19));
-    //Mat roiD = src_gray(Rect(15+w+w+w,50,w,19));
-    //imshow("roiA",roiA);
-    //imshow("roiB",roiB);
-    //imshow("roiC",roiC);
-    //imshow("roiD",roiD);§ó§ï£¾
+    Mat roiA = src_gray(Rect(15,50,w,19));
+    Mat roiB = src_gray(Rect(15+w,50,w,19));
+    Mat roiC = src_gray(Rect(15+w+w,50,w,19));
+    Mat roiD = src_gray(Rect(15+w+w+w,50,w,19));
+    imshow("roiA",roiA);
+    imshow("roiB",roiB);
+    imshow("roiC",roiC);
+    imshow("roiD",roiD);
     
-    /*threshold(roiA,roiA,165,255,THRESH_BINARY);
+    threshold(roiA,roiA,165,255,THRESH_BINARY);
     threshold(roiB,roiB,165,255,THRESH_BINARY);
     threshold(roiC,roiC,165,255,THRESH_BINARY);
-    threshold(roiD,roiD,165,255,THRESH_BINARY);*/
+    threshold(roiD,roiD,165,255,THRESH_BINARY);
     
 //    imwrite("D:\sampleA.jpg",roiA);
 //    imwrite("D:\sampleB.jpg",roiB);
@@ -74,7 +74,7 @@ void thresh_callback(int, void*)
     Mat element = getStructuringElement(morph_elem,
                                         Size(2*morph_size +1,2*morph_size+1),
                                         Point(morph_size,morph_size));
-    //morphologyEx(roi2,dst,6,element);
+    morphologyEx(roi2,dst,6,element);
     threshold(roi2,dst,168,255,THRESH_BINARY_INV);
     imshow("threshold",dst);
     
@@ -96,8 +96,8 @@ void thresh_callback(int, void*)
         
         rectangle(drawing,boundRect[i].tl(),
                   boundRect[i].br(),color,1,8,0);
-        /*drawContours(drawing, contours,(int)i,
-         color,2,4,hierarchy,0,Point());*/
+        drawContours(drawing, contours,(int)i,
+         color,2,4,hierarchy,0,Point());
     }
     
     namedWindow("Contours",WINDOW_AUTOSIZE);

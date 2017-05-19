@@ -3,103 +3,161 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <stdlib.h>
 #include <stdio.h>
-#include <iostream>
 
 using namespace cv;
 using namespace std;
 
 Mat src, src_gray,dst;
-Mat erosion_dst,dilation_dst;
-
-
-int thresh = 150;
-int max_thresh=255;
-RNG rag(12345);
-
-int morph_elem =2;
-int morph_size = 15;
-int morph_operator = 3;
-int const max_operator=4;
-
-const char* window_name = "Morphology Transformations Demo";
-
-void thresh_callback(int,void*);
 
 int main(int argc,char** argv)
 {
-    src = imread(argv[1], CV_LOAD_IMAGE_COLOR);
-    if(!src.data)
-    {
-        cout << "not"<< endl;
-        return -1;
-    }
-    
+	Mat canny_output;
+
+	//讀取圖片
+	src = imread("D:\\ROC\\demon\\images\\sample.bmp",CV_LOAD_IMAGE_COLOR);
+	if(!src.data)
+	{
+		return -1;
+	}
+	
+	//轉灰階圖
     cvtColor(src,src_gray,COLOR_BGR2GRAY);
-    namedWindow(window_name, WINDOW_AUTOSIZE);
+	//imshow("Grayimage",src_gray);
+	
+	//放大
+	pyrUp(src_gray,src_gray,Size(src.cols*2,src.rows*2));
+	//imshow("up",src_gray);
+
+	//高斯濾波
+	blur(src_gray,dst,Size(3,3));
+	//imshow("blur",dst);
     
-    thresh_callback(0,0);
-    
-    waitKey(0);
-    return 0;
-}
+
+	//二值化
+	threshold(dst,dst,140,255,THRESH_BINARY);
+	//imshow("threshold",dst);
+
+	//膨脹	
+	dilate(dst,dst,Mat(),Point(-1,-1),5);
+	//imshow("1",dst);
+	
+	int row = 1;
+	row = dst.rows;
+	int colum = 1;
+	int** iarry = new int*[dst.rows];
+	for(int i = 0;i<dst.rows;i++)
+	{
+		iarry[i] = new int [dst.cols];
+	}
+	for(int i = 0;i< dst.rows;i++)
+	{
+		for(int j = 0 ;j<dst.cols;j++)
+		{
+			iarry[i][j] = 0;		
+		}
+	}
+	
+	int n = 1;
+	
+	for(int i = 1;i< dst.rows;i++)   //分群
+	{
+		for(int j = 1 ;j<dst.cols-1;j++)
+		{
+			if(dst.at<uchar>(i,j) == 255)
+			{	
+				if(iarry[i-1][j+1] ==0 && iarry[i][j-1] ==0 && iarry[i-1][j] ==0)//(B L U)
+					iarry[i][j] = n++;  //N=new
+				else if(iarry[i-1][j+1] !=0 && iarry[i][j-1] ==0 && iarry[i-1][j] ==0 )
+					iarry[i][j] = iarry[i-1][j+1];  //N=B
+				else if(iarry[i][j-1] ==0 && iarry[i-1][j] !=0) //(L U)
+					iarry[i][j] = iarry[i-1][j];    //N=U
+				else if(iarry[i][j-1] !=0 && iarry[i-1][j] ==0) //(L U)
+					iarry[i][j] = iarry[i][j-1];    //N=L
+				else if(iarry[i][j-1] !=0 && iarry[i-1][j] !=0 && iarry[i][j-1] == iarry[i-1][j] )
+					iarry[i][j] = iarry[i-1][j];    //N=U
+				else if(iarry[i][j-1] !=0 && iarry[i-1][j] !=0 && iarry[i][j-1] != iarry[i-1][j])
+					iarry[i][j] = iarry[i-1][j];    //N=U
+			}			
+		}
+	}
+
+ 
+	/*for(int i = 0;i< mat.rows;i++)  //測試圖
+	{
+		for(int j = 0 ;j<mat.cols;j++)
+		{
+			if(mat.at<uchar>(i,j) == 255)
+			{
+				ds2.at<uchar>(i,j) = iarry[i][j]*100;
+			 
+			}
+			else
+				ds2.at<uchar>(i,j) = 255;
+		}
+	}
+	imshow("02",ds2);*/
+
+	int* sum = new int[n];
+	for(int i =0;i<n;i++) //初始化
+	{
+		sum[i] =0;
+	}
+    for(int i = 0;i< dst.rows;i++)//計算標記量
+	{
+		for(int j = 0 ;j<dst.cols;j++)
+		{
+			sum[iarry[i][j]] ++;
+		}
+	}
+	for(int i =0;i<n;i++)//篩選
+	{
+		if(sum[i] > 850)
+			sum[i] =0;
+		if(sum[i]< 320)
+			sum[i] = 0;
+	}
+
+	for(int i = 0;i< dst.rows;i++) // 清除篩選結果
+	{
+		for(int j = 0 ;j<dst.cols;j++)
+		{
+			if(sum[iarry[i][j]] == 0 )
+			{
+				iarry[i][j] = 0;
+				dst.at<uchar>(i,j) = 255;
+			}	
+			else
+				dst.at<uchar>(i,j) = 0;
+		}
+	}
+	//imshow("03",dst);
+
+	Canny(dst,dst,0,50,5);  //建立輪廓Canny
+	//imshow("canny",ds3);
+	
+	vector<vector<Point>> approx;  //尋找輪廓
+	findContours(dst,approx,CV_RETR_LIST,CV_CHAIN_APPROX_SIMPLE);
+
+	int xx = 0;
+	for(size_t i = 0;i<approx.size()-1;i++)  //計算平均座標
+	{
+		Point bb = approx[i][0];
+		xx += bb.x;
+	}
+    xx /= approx.size();
+	for(size_t i = 1;i<approx.size()-1;i++)
+	{
+		Point bb = approx[i][0];
+		if(abs(approx[i][0].x - approx[i-1][0].x) >10 && abs(xx - bb.x) < 60 )  //條件一 不要重複 條件二 離數字太遠
+		{
+			Mat roi = src_gray(Rect(bb.x-5,bb.y-5,25,40));
+			char buffer[3];
+			sprintf(buffer,"%d",i);
+			imshow(buffer,roi);
+		}
+	}
 
 
-void thresh_callback(int,void*)
-{
-    Mat canny_output;
-    vector<vector<Point>>contours;
-    
-    vector<Vec4i> hierarchy;
-    Mat roi2 = src_gray(Rect(15,50,70,19));
-    int w = 17;
-    //Mat roiA = src_gray(Rect(15,50,w,19));
-    //Mat roiB = src_gray(Rect(15+w,50,w,19));
-    //Mat roiC = src_gray(Rect(15+w+w,50,w,19));
-    //Mat roiD = src_gray(Rect(15+w+w+w,50,w,19));
-    //imshow("roiA",roiA);
-    //imshow("roiB",roiB);
-    //imshow("roiC",roiC);
-    //imshow("roiD",roiD);更改ˇ
-    
-    /*threshold(roiA,roiA,165,255,THRESH_BINARY);
-    threshold(roiB,roiB,165,255,THRESH_BINARY);
-    threshold(roiC,roiC,165,255,THRESH_BINARY);
-    threshold(roiD,roiD,165,255,THRESH_BINARY);*/
-    
-//    imwrite("D:\sampleA.jpg",roiA);
-//    imwrite("D:\sampleB.jpg",roiB);
-//    imwrite("D:\sampleC.jpg",roiC);
-//    imwrite("D:\sampleD.jpg",roiD);
-    
-    Mat element = getStructuringElement(morph_elem,
-                                        Size(2*morph_size +1,2*morph_size+1),
-                                        Point(morph_size,morph_size));
-    //morphologyEx(roi2,dst,6,element);
-    threshold(roi2,dst,168,255,THRESH_BINARY_INV);
-    imshow("threshold",dst);
-    
-    Canny(dst,canny_output,235, 255 *2,3);
-    imshow("canny",canny_output);
-    
-    findContours(canny_output,contours,hierarchy,
-                 RETR_LIST,CHAIN_APPROX_NONE,Point(0,0));
-    imshow("findContour",canny_output);
-    
-    vector<Rect>boundRect(contours.size());
-    Mat drawing = Mat::zeros(canny_output.size(),CV_8UC3);
-    for(size_t i =0;i<contours.size();i++)
-    {
-        Scalar color = Scalar(rag.uniform(0,255),
-                              rag.uniform(0,255),rag.uniform(0,255));
-        
-        boundRect[i]=boundingRect(Mat(contours[i]));
-        
-        rectangle(drawing,boundRect[i].tl(),
-                  boundRect[i].br(),color,1,8,0);
-        /*drawContours(drawing, contours,(int)i,
-         color,2,4,hierarchy,0,Point());*/
-    }
-    
-    namedWindow("Contours",WINDOW_AUTOSIZE);
-    imshow("Contours",drawing);
+	waitKey(0);
+	return 0;
 }

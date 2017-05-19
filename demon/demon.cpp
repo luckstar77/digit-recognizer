@@ -8,6 +8,7 @@ using namespace cv;
 using namespace std;
 
 Mat src, src_gray,dst;
+Mat erosion_dst, dilation_dst;
 
 int main(int argc,char** argv)
 {
@@ -22,15 +23,15 @@ int main(int argc,char** argv)
 	
 	//轉灰階圖
     cvtColor(src,src_gray,COLOR_BGR2GRAY);
-	//imshow("Grayimage",src_gray);
+	imshow("Grayimage",src_gray);
 	
 	//放大
 	pyrUp(src_gray,src_gray,Size(src.cols*2,src.rows*2));
-	//imshow("up",src_gray);
+	imshow("up",src_gray);
 
 	//高斯濾波
 	blur(src_gray,dst,Size(3,3));
-	//imshow("blur",dst);
+	imshow("blur",dst);
     
 
 	//二值化
@@ -38,8 +39,8 @@ int main(int argc,char** argv)
 	//imshow("threshold",dst);
 
 	//膨脹	
-	dilate(dst,dst,Mat(),Point(-1,-1),5);
-	//imshow("1",dst);
+	dilate(dst,dst,Mat(),Point(-1,-1),4);
+	imshow("1",dst);
 	
 	int row = 1;
 	row = dst.rows;
@@ -82,20 +83,20 @@ int main(int argc,char** argv)
 	}
 
  
-	/*for(int i = 0;i< mat.rows;i++)  //測試圖
-	{
-		for(int j = 0 ;j<mat.cols;j++)
-		{
-			if(mat.at<uchar>(i,j) == 255)
-			{
-				ds2.at<uchar>(i,j) = iarry[i][j]*100;
-			 
-			}
-			else
-				ds2.at<uchar>(i,j) = 255;
-		}
-	}
-	imshow("02",ds2);*/
+	//for(int i = 0;i< dst.rows;i++)  //測試圖
+	//{
+	//	for(int j = 0 ;j<dst.cols;j++)
+	//	{
+	//		if(dst.at<uchar>(i,j) == 255)
+	//		{
+	//			dst.at<uchar>(i,j) = iarry[i][j]*100;
+	//		 
+	//		}
+	//		else
+	//			dst.at<uchar>(i,j) = 255;
+	//	}
+	//}
+	//imshow("02",dst);
 
 	int* sum = new int[n];
 	for(int i =0;i<n;i++) //初始化
@@ -116,7 +117,6 @@ int main(int argc,char** argv)
 		if(sum[i]< 320)
 			sum[i] = 0;
 	}
-
 	for(int i = 0;i< dst.rows;i++) // 清除篩選結果
 	{
 		for(int j = 0 ;j<dst.cols;j++)
@@ -130,10 +130,10 @@ int main(int argc,char** argv)
 				dst.at<uchar>(i,j) = 0;
 		}
 	}
-	//imshow("03",dst);
+	imshow("03",dst);
 
 	Canny(dst,dst,0,50,5);  //建立輪廓Canny
-	//imshow("canny",ds3);
+	imshow("canny",dst);
 	
 	vector<vector<Point>> approx;  //尋找輪廓
 	findContours(dst,approx,CV_RETR_LIST,CV_CHAIN_APPROX_SIMPLE);
@@ -161,3 +161,4 @@ int main(int argc,char** argv)
 	waitKey(0);
 	return 0;
 }
+

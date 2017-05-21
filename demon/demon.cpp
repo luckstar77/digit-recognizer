@@ -12,10 +12,9 @@ Mat erosion_dst, dilation_dst;
 
 int main(int argc,char** argv)
 {
-	Mat canny_output;
 
 	//讀取圖片
-	src = imread("D:\\OCR\\digital-recognize\\demon\\images\\sample.bmp",CV_LOAD_IMAGE_COLOR);
+	src = imread(argv[1],CV_LOAD_IMAGE_COLOR);
 	if(!src.data)
 	{
 		return -1;
@@ -30,16 +29,12 @@ int main(int argc,char** argv)
 	imshow("up",src_gray);*/
     
 	//高斯濾波
-	/*blur(src_gray,dst,Size(2,2));
+	/*blur(src_gray,dst,Size(3,3));
 	imshow("blur",dst);*/
 
 	////放大
 	//pyrUp(src_gray,src_gray,Size(src.cols*2,src.rows*2));
 	//imshow("up",src_gray);
-
-	////高斯濾波
-	//blur(src_gray,dst,Size(3,3));
-	//imshow("blur",dst);
     
 	int T =0;
 	double Tmax;
@@ -74,20 +69,15 @@ int main(int argc,char** argv)
 		else
 			break;
 	}
-	//二值化
-	threshold(src_gray,dst,140,255,THRESH_BINARY);
-	imshow("threshold",dst);
     
-	//膨脹	
-	dilate(dst,dst,Mat(),Point(-1,-1),1);
-	imshow("1",dst);
 
 	threshold(src_gray,dst,T,255,THRESH_BINARY);
 	imshow("threshold",dst);
 
 	//膨脹	
-	/*dilate(dst,dst,Mat(),Point(-1,-1),1);
-	imshow("1",dst);*/
+	//erode(dst,dst,Mat(),Point(-1,-1),1);
+    //dilate(dst,dst,Mat(),Point(-1,-1),1);
+	//imshow("1",dst);
 	
 	int row = 1;
 	row = dst.rows;
@@ -122,10 +112,10 @@ int main(int argc,char** argv)
 				else if(iarry[i][j-1] !=0 && iarry[i-1][j] ==0) //(L U)
 					iarry[i][j] = iarry[i][j-1];    //N=L
 				else if(iarry[i][j-1] !=0 && iarry[i-1][j] !=0 && iarry[i][j-1] == iarry[i-1][j] )
-					iarry[i][j] = iarry[i][j-1];    //N=U
+					iarry[i][j] = iarry[i][j-1];    //N=L
 				else if(iarry[i][j-1] !=0 && iarry[i-1][j] !=0 && iarry[i][j-1] != iarry[i-1][j])
 				{
-					iarry[i][j] = iarry[i][j-1];    //N=U
+					iarry[i][j] = iarry[i][j-1];    //N=L
 					iarry[i][j-1] = iarry[i][j-1];
 				}
 			}			
@@ -163,10 +153,7 @@ int main(int argc,char** argv)
 	}
 	for(int i =0;i<n;i++)//篩選
 	{
-		if(sum[i] > 360)
-			sum[i] =0;
-		if(sum[i]< 50)
-		if(sum[i] > 100)
+		if(sum[i] > 75)
 			sum[i] =0;
 		if(sum[i]< 25)
 			sum[i] = 0;

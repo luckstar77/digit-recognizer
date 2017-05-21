@@ -26,20 +26,19 @@ int main(int argc,char** argv)
 	imshow("Grayimage",src_gray);
 	
 	//放大
-	pyrUp(src_gray,src_gray,Size(src.cols*2,src.rows*2));
-	imshow("up",src_gray);
-
-	//高斯濾波
-	blur(src_gray,dst,Size(3,3));
-	imshow("blur",dst);
+	/*pyrUp(src_gray,src_gray,Size(src.cols*2,src.rows*2));
+	imshow("up",src_gray);*/
     
+	//高斯濾波
+	/*blur(src_gray,dst,Size(2,2));
+	imshow("blur",dst);*/
 
 	//二值化
-	threshold(dst,dst,140,255,THRESH_BINARY);
-	//imshow("threshold",dst);
-
+	threshold(src_gray,dst,140,255,THRESH_BINARY);
+	imshow("threshold",dst);
+    
 	//膨脹	
-	dilate(dst,dst,Mat(),Point(-1,-1),4);
+	dilate(dst,dst,Mat(),Point(-1,-1),1);
 	imshow("1",dst);
 	
 	int row = 1;
@@ -59,7 +58,7 @@ int main(int argc,char** argv)
 	}
 	
 	int n = 1;
-	
+	for(int x = 0;x< 2;x++){
 	for(int i = 1;i< dst.rows;i++)   //分群
 	{
 		for(int j = 1 ;j<dst.cols-1;j++)
@@ -75,28 +74,32 @@ int main(int argc,char** argv)
 				else if(iarry[i][j-1] !=0 && iarry[i-1][j] ==0) //(L U)
 					iarry[i][j] = iarry[i][j-1];    //N=L
 				else if(iarry[i][j-1] !=0 && iarry[i-1][j] !=0 && iarry[i][j-1] == iarry[i-1][j] )
-					iarry[i][j] = iarry[i-1][j];    //N=U
+					iarry[i][j] = iarry[i][j-1];    //N=U
 				else if(iarry[i][j-1] !=0 && iarry[i-1][j] !=0 && iarry[i][j-1] != iarry[i-1][j])
-					iarry[i][j] = iarry[i-1][j];    //N=U
+				{
+					iarry[i][j] = iarry[i][j-1];    //N=U
+					iarry[i][j-1] = iarry[i][j-1];
+				}
 			}			
 		}
 	}
+	}
 
  
-	//for(int i = 0;i< dst.rows;i++)  //測試圖
-	//{
-	//	for(int j = 0 ;j<dst.cols;j++)
-	//	{
-	//		if(dst.at<uchar>(i,j) == 255)
-	//		{
-	//			dst.at<uchar>(i,j) = iarry[i][j]*100;
-	//		 
-	//		}
-	//		else
-	//			dst.at<uchar>(i,j) = 255;
-	//	}
-	//}
-	//imshow("02",dst);
+	for(int i = 0;i< dst.rows;i++)  //測試圖
+	{
+		for(int j = 0 ;j<dst.cols;j++)
+		{
+			if(dst.at<uchar>(i,j) == 255)
+			{
+				dst.at<uchar>(i,j) = iarry[i][j]*10;
+			 
+			}
+			else
+				dst.at<uchar>(i,j) = 0;
+		}
+	}
+	imshow("02",dst);
 
 	int* sum = new int[n];
 	for(int i =0;i<n;i++) //初始化
@@ -112,9 +115,9 @@ int main(int argc,char** argv)
 	}
 	for(int i =0;i<n;i++)//篩選
 	{
-		if(sum[i] > 850)
+		if(sum[i] > 360)
 			sum[i] =0;
-		if(sum[i]< 320)
+		if(sum[i]< 50)
 			sum[i] = 0;
 	}
 	for(int i = 0;i< dst.rows;i++) // 清除篩選結果
@@ -139,23 +142,23 @@ int main(int argc,char** argv)
 	findContours(dst,approx,CV_RETR_LIST,CV_CHAIN_APPROX_SIMPLE);
 
 	int xx = 0;
-	for(size_t i = 0;i<approx.size()-1;i++)  //計算平均座標
-	{
-		Point bb = approx[i][0];
-		xx += bb.x;
-	}
-    xx /= approx.size();
-	for(size_t i = 1;i<approx.size()-1;i++)
-	{
-		Point bb = approx[i][0];
-		if(abs(approx[i][0].x - approx[i-1][0].x) >10 && abs(xx - bb.x) < 60 )  //條件一 不要重複 條件二 離數字太遠
-		{
-			Mat roi = src_gray(Rect(bb.x-5,bb.y-5,25,40));
-			char buffer[3];
-			sprintf(buffer,"%d",i);
-			imshow(buffer,roi);
-		}
-	}
+	//for(size_t i = 0;i<approx.size()-1;i++)  //計算平均座標
+	//{
+	//	Point bb = approx[i][0];
+	//	xx += bb.y;
+	//}
+ //   xx /= approx.size();
+	//for(size_t i = 1;i<approx.size()-1;i++)
+	//{
+	//	Point bb = approx[i][0];
+	//	if(abs(approx[i][0].x - approx[i-1][0].x) >5 && abs(xx - bb.y) < 10 )  //條件一 不要重複 條件二 離數字太遠
+	//	{
+	//		Mat roi = src_gray(Rect(bb.x-5,bb.y-5,12,20));
+	//		char buffer[3];
+	//		sprintf(buffer,"%d",i);
+	//		imshow(buffer,roi);
+	//	}
+	//}
 
 
 	waitKey(0);

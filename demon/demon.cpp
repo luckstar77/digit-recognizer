@@ -7,207 +7,214 @@
 using namespace cv;
 using namespace std;
 
-Mat src, src_gray,dst;
+Mat src_gray,dst;
 Mat erosion_dst, dilation_dst;
+const int WIDTH = 160, HEIGHT = 70;
+
+unsigned char DigitRecognize(unsigned char, unsigned char *);
 
 int main(int argc,char** argv)
 {
 
-	//Åª¨ú¹Ï¤ù
-	src = imread(argv[1],CV_LOAD_IMAGE_COLOR);
-	if(!src.data)
+	//â‰ˆâ„¢Â®Ë™Ï€Å“Â§Ë˜
+	Mat image = imread(argv[1],CV_LOAD_IMAGE_COLOR);
+	if(!image.data)
 	{
 		return -1;
 	}
-	
-	//Âà¦Ç¶¥¹Ï
-    cvtColor(src,src_gray,COLOR_BGR2GRAY);
-	imshow("Grayimage",src_gray);
-	
-	//©ñ¤j
-	/*pyrUp(src_gray,src_gray,Size(src.cols*2,src.rows*2));
-	imshow("up",src_gray);*/
     
-	//°ª´µÂoªi
-	/*blur(src_gray,dst,Size(3,3));
-	imshow("blur",dst);*/
-
-	////©ñ¤j
-	//pyrUp(src_gray,src_gray,Size(src.cols*2,src.rows*2));
-	//imshow("up",src_gray);
-    
-	int T =0;
-	double Tmax;
-	double Tmin;;
-	minMaxIdx(src_gray,&Tmin,&Tmax);
-	T = ( Tmax + Tmin ) / 2;
-	while(true)
-	{
-
-		int Tosum =0,Tusum =0; //osum¶W¹LT¥[Á` usum ¤p©óT¥[Á`
-		int on = 0,un =0;  //on¶W¹LTªºÁ`¼Æ un ¤p©óTªºÁ`¼Æ 
-		for(int i = 0;i<src_gray.rows;i++)
-		{
-			for(int j = 0 ;j <src_gray.cols; j++)
-			{
-				if(src_gray.at<uchar>(i,j) >= T )
-				{
-					Tosum += src_gray.at<uchar>(i,j);
-					on ++;
-				}
-				else
-				{
-					Tusum += src_gray.at<uchar>(i,j);
-					un ++;
-				}
-			}
-		}
-		Tosum /=on;
-		Tusum /=un;
-		if((Tosum+Tusum) /2  != T)
-			T = (Tosum+Tusum) /2;
-		else
-			break;
-	}
-    
-
-	threshold(src_gray,dst,T,255,THRESH_BINARY);
-	imshow("threshold",dst);
-
-	//¿±µÈ	
-	//erode(dst,dst,Mat(),Point(-1,-1),1);
-    //dilate(dst,dst,Mat(),Point(-1,-1),1);
-	//imshow("1",dst);
-	
-	int row = 1;
-	row = dst.rows;
-	int colum = 1;
-	int** iarry = new int*[dst.rows];
-	for(int i = 0;i<dst.rows;i++)
-	{
-		iarry[i] = new int [dst.cols];
-	}
-	for(int i = 0;i< dst.rows;i++)
-	{
-		for(int j = 0 ;j<dst.cols;j++)
-		{
-			iarry[i][j] = 0;		
-		}
-	}
-	
-	int n = 1;
-	for(int x = 0;x< 2;x++){
-	for(int i = 1;i< dst.rows;i++)   //¤À¸s
-	{
-		for(int j = 1 ;j<dst.cols-1;j++)
-		{
-			if(dst.at<uchar>(i,j) == 255)
-			{	
-				if(iarry[i-1][j+1] ==0 && iarry[i][j-1] ==0 && iarry[i-1][j] ==0)//(B L U)
-					iarry[i][j] = n++;  //N=new
-				else if(iarry[i-1][j+1] !=0 && iarry[i][j-1] ==0 && iarry[i-1][j] ==0 )
-					iarry[i][j] = iarry[i-1][j+1];  //N=B
-				else if(iarry[i][j-1] ==0 && iarry[i-1][j] !=0) //(L U)
-					iarry[i][j] = iarry[i-1][j];    //N=U
-				else if(iarry[i][j-1] !=0 && iarry[i-1][j] ==0) //(L U)
-					iarry[i][j] = iarry[i][j-1];    //N=L
-				else if(iarry[i][j-1] !=0 && iarry[i-1][j] !=0 && iarry[i][j-1] == iarry[i-1][j] )
-					iarry[i][j] = iarry[i][j-1];    //N=L
-				else if(iarry[i][j-1] !=0 && iarry[i-1][j] !=0 && iarry[i][j-1] != iarry[i-1][j])
-				{
-					iarry[i][j] = iarry[i][j-1];    //N=L
-					iarry[i][j-1] = iarry[i][j-1];
-				}
-			}			
-		}
-	}
-	}
-
- 
-	for(int i = 0;i< dst.rows;i++)  //´ú¸Õ¹Ï
-	{
-		for(int j = 0 ;j<dst.cols;j++)
-		{
-			if(dst.at<uchar>(i,j) == 255)
-			{
-				dst.at<uchar>(i,j) = iarry[i][j]*10;
-			 
-			}
-			else
-				dst.at<uchar>(i,j) = 0;
-		}
-	}
-	imshow("02",dst);
-
-	int* sum = new int[n];
-	for(int i =0;i<n;i++) //ªì©l¤Æ
-	{
-		sum[i] =0;
-	}
-    for(int i = 0;i< dst.rows;i++)//­pºâ¼Ð°O¶q
-	{
-		for(int j = 0 ;j<dst.cols;j++)
-		{
-			sum[iarry[i][j]] ++;
-		}
-	}
-	for(int i =0;i<n;i++)//¿z¿ï
-	{
-		if(sum[i] > 75)
-			sum[i] =0;
-		if(sum[i]< 25)
-			sum[i] = 0;
-	}
-	for(int i = 0;i< dst.rows;i++) // ²M°£¿z¿ïµ²ªG
-	{
-		for(int j = 0 ;j<dst.cols;j++)
-		{
-			if(sum[iarry[i][j]] == 0 )
-			{
-				iarry[i][j] = 0;
-				dst.at<uchar>(i,j) = 255;
-			}	
-			else
-				dst.at<uchar>(i,j) = 0;
-		}
-	}
-	imshow("03",dst);
-
-	Canny(dst,dst,0,50,5);  //«Ø¥ß½ü¹øCanny
-	imshow("canny",dst);
-	
-	//vector<vector<Point>> approx;  //´M§ä½ü¹ø
-	//findContours(dst,approx,CV_RETR_LIST,CV_CHAIN_APPROX_SIMPLE);
-
-	int xx = 0;
-	//for(size_t i = 0;i<approx.size()-1;i++)  //­pºâ¥­§¡®y¼Ð
-	//{
-	//	Point bb = approx[i][0];
-	//	xx += bb.y;
-	//int xx = 0;
-	//for(size_t i = 0;i<approx.size()-1;i++)  //­pºâ¥­§¡®y¼Ð
-	//{
-	//	Point bb = approx[i][0];
-	//	xx += bb.x;
-	//}
- //   xx /= approx.size();
-	//for(size_t i = 1;i<approx.size()-1;i++)
-	//{
-	//	Point bb = approx[i][0];
-	//	if(abs(approx[i][0].x - approx[i-1][0].x) >5 && abs(xx - bb.y) < 10 )  //±ø¥ó¤@ ¤£­n­«½Æ ±ø¥ó¤G Â÷¼Æ¦r¤Ó»·
-	//	{
-	//		Mat roi = src_gray(Rect(bb.x-5,bb.y-5,12,20));
-	//	if(abs(approx[i][0].x - approx[i-1][0].x) >10 && abs(xx - bb.x) < 60 )  //±ø¥ó¤@ ¤£­n­«½Æ ±ø¥ó¤G Â÷¼Æ¦r¤Ó»·
-	//	{
-	//		Mat roi = src_gray(Rect(bb.x-5,bb.y-5,25,40));
-	//		char buffer[3];
-	//		sprintf(buffer,"%d",i);
-	//		imshow(buffer,roi);
-	//	}
-	//}
-
-
-	waitKey(0);
-	return 0;
+    DigitRecognize(0, image.data);
 }
 
+unsigned char DigitRecognize(unsigned char type, unsigned char *imageBuf) {
+    Mat src = Mat(HEIGHT, WIDTH, CV_8UC3, imageBuf);
+    //Â¬â€¡Â¶Â«âˆ‚â€¢Ï€Å“
+    cvtColor(src,src_gray,COLOR_BGR2GRAY);
+    imshow("Grayimage",src_gray);
+    
+    //Â©Ã’Â§j
+    /*pyrUp(src_gray,src_gray,Size(src.cols*2,src.rows*2));
+     imshow("up",src_gray);*/
+    
+    //âˆžâ„¢Â¥ÂµÂ¬oâ„¢i
+    /*blur(src_gray,dst,Size(3,3));
+     imshow("blur",dst);*/
+    
+    ////Â©Ã’Â§j
+    //pyrUp(src_gray,src_gray,Size(src.cols*2,src.rows*2));
+    //imshow("up",src_gray);
+    
+    int T =0;
+    double Tmax;
+    double Tmin;;
+    minMaxIdx(src_gray,&Tmin,&Tmax);
+    T = ( Tmax + Tmin ) / 2;
+    while(true)
+    {
+        
+        int Tosum =0,Tusum =0; //osumâˆ‚WÏ€LTâ€¢[Â¡` usum Â§pÂ©Ã›Tâ€¢[Â¡`
+        int on = 0,un =0;  //onâˆ‚WÏ€LTâ„¢âˆ«Â¡`Âºâˆ† un Â§pÂ©Ã›Tâ„¢âˆ«Â¡`Âºâˆ†
+        for(int i = 0;i<src_gray.rows;i++)
+        {
+            for(int j = 0 ;j <src_gray.cols; j++)
+            {
+                if(src_gray.at<uchar>(i,j) >= T )
+                {
+                    Tosum += src_gray.at<uchar>(i,j);
+                    on ++;
+                }
+                else
+                {
+                    Tusum += src_gray.at<uchar>(i,j);
+                    un ++;
+                }
+            }
+        }
+        Tosum /=on;
+        Tusum /=un;
+        if((Tosum+Tusum) /2  != T)
+            T = (Tosum+Tusum) /2;
+        else
+            break;
+    }
+    
+    
+    threshold(src_gray,dst,T,255,THRESH_BINARY);
+    imshow("threshold",dst);
+    
+    //Ã¸Â±ÂµÂ»
+    //erode(dst,dst,Mat(),Point(-1,-1),1);
+    //dilate(dst,dst,Mat(),Point(-1,-1),1);
+    //imshow("1",dst);
+    
+    int row = 1;
+    row = dst.rows;
+    int colum = 1;
+    int** iarry = new int*[dst.rows];
+    for(int i = 0;i<dst.rows;i++)
+    {
+        iarry[i] = new int [dst.cols];
+    }
+    for(int i = 0;i< dst.rows;i++)
+    {
+        for(int j = 0 ;j<dst.cols;j++)
+        {
+            iarry[i][j] = 0;
+        }
+    }
+    
+    int n = 1;
+    for(int x = 0;x< 2;x++){
+        for(int i = 1;i< dst.rows;i++)   //Â§Â¿âˆs
+        {
+            for(int j = 1 ;j<dst.cols-1;j++)
+            {
+                if(dst.at<uchar>(i,j) == 255)
+                {
+                    if(iarry[i-1][j+1] ==0 && iarry[i][j-1] ==0 && iarry[i-1][j] ==0)//(B L U)
+                        iarry[i][j] = n++;  //N=new
+                    else if(iarry[i-1][j+1] !=0 && iarry[i][j-1] ==0 && iarry[i-1][j] ==0 )
+                        iarry[i][j] = iarry[i-1][j+1];  //N=B
+                    else if(iarry[i][j-1] ==0 && iarry[i-1][j] !=0) //(L U)
+                        iarry[i][j] = iarry[i-1][j];    //N=U
+                    else if(iarry[i][j-1] !=0 && iarry[i-1][j] ==0) //(L U)
+                        iarry[i][j] = iarry[i][j-1];    //N=L
+                    else if(iarry[i][j-1] !=0 && iarry[i-1][j] !=0 && iarry[i][j-1] == iarry[i-1][j] )
+                        iarry[i][j] = iarry[i][j-1];    //N=L
+                    else if(iarry[i][j-1] !=0 && iarry[i-1][j] !=0 && iarry[i][j-1] != iarry[i-1][j])
+                    {
+                        iarry[i][j] = iarry[i][j-1];    //N=L
+                        iarry[i][j-1] = iarry[i][j-1];
+                    }
+                }
+            }
+        }
+    }
+    
+    
+    for(int i = 0;i< dst.rows;i++)  //Â¥Ë™âˆâ€™Ï€Å“
+    {
+        for(int j = 0 ;j<dst.cols;j++)
+        {
+            if(dst.at<uchar>(i,j) == 255)
+            {
+                dst.at<uchar>(i,j) = iarry[i][j]*10;
+                
+            }
+            else
+                dst.at<uchar>(i,j) = 0;
+        }
+    }
+    imshow("02",dst);
+    
+    int* sum = new int[n];
+    for(int i =0;i<n;i++) //â„¢ÃÂ©lÂ§âˆ†
+    {
+        sum[i] =0;
+    }
+    for(int i = 0;i< dst.rows;i++)//â‰ pâˆ«â€šÂºâ€“âˆžOâˆ‚q
+    {
+        for(int j = 0 ;j<dst.cols;j++)
+        {
+            sum[iarry[i][j]] ++;
+        }
+    }
+    for(int i =0;i<n;i++)//Ã¸zÃ¸Ã”
+    {
+        if(sum[i] > 75)
+            sum[i] =0;
+        if(sum[i]< 25)
+            sum[i] = 0;
+    }
+    for(int i = 0;i< dst.rows;i++) // â‰¤MâˆžÂ£Ã¸zÃ¸Ã”Âµâ‰¤â„¢G
+    {
+        for(int j = 0 ;j<dst.cols;j++)
+        {
+            if(sum[iarry[i][j]] == 0 )
+            {
+                iarry[i][j] = 0;
+                dst.at<uchar>(i,j) = 255;
+            }
+            else
+                dst.at<uchar>(i,j) = 0;
+        }
+    }
+    imshow("03",dst);
+    
+    Canny(dst,dst,0,50,5);  //Â´Ã¿â€¢ï¬‚Î©Â¸Ï€Â¯Canny
+    imshow("canny",dst);
+    
+    //vector<vector<Point>> approx;  //Â¥MÃŸâ€°Î©Â¸Ï€Â¯
+    //findContours(dst,approx,CV_RETR_LIST,CV_CHAIN_APPROX_SIMPLE);
+    
+    int xx = 0;
+    //for(size_t i = 0;i<approx.size()-1;i++)  //â‰ pâˆ«â€šâ€¢â‰ ÃŸÂ°Ã†yÂºâ€“
+    //{
+    //	Point bb = approx[i][0];
+    //	xx += bb.y;
+    //int xx = 0;
+    //for(size_t i = 0;i<approx.size()-1;i++)  //â‰ pâˆ«â€šâ€¢â‰ ÃŸÂ°Ã†yÂºâ€“
+    //{
+    //	Point bb = approx[i][0];
+    //	xx += bb.x;
+    //}
+    //   xx /= approx.size();
+    //for(size_t i = 1;i<approx.size()-1;i++)
+    //{
+    //	Point bb = approx[i][0];
+    //	if(abs(approx[i][0].x - approx[i-1][0].x) >5 && abs(xx - bb.y) < 10 )  //Â±Â¯â€¢Ã›Â§@ Â§Â£â‰ nâ‰ Â´Î©âˆ† Â±Â¯â€¢Ã›Â§G Â¬ËœÂºâˆ†Â¶rÂ§â€Âªâˆ‘
+    //	{
+    //		Mat roi = src_gray(Rect(bb.x-5,bb.y-5,12,20));
+    //	if(abs(approx[i][0].x - approx[i-1][0].x) >10 && abs(xx - bb.x) < 60 )  //Â±Â¯â€¢Ã›Â§@ Â§Â£â‰ nâ‰ Â´Î©âˆ† Â±Â¯â€¢Ã›Â§G Â¬ËœÂºâˆ†Â¶rÂ§â€Âªâˆ‘
+    //	{
+    //		Mat roi = src_gray(Rect(bb.x-5,bb.y-5,25,40));
+    //		char buffer[3];
+    //		sprintf(buffer,"%d",i);
+    //		imshow(buffer,roi);
+    //	}
+    //}
+    
+    
+    waitKey(0);
+    return 0;
+};

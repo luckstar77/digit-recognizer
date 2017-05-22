@@ -3,6 +3,7 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <stdlib.h>
 #include <stdio.h>
+# include <iostream>
 
 using namespace cv;
 using namespace std;
@@ -13,6 +14,9 @@ const int WIDTH = 160, HEIGHT = 70;
 //#define PRINTRESULT
 
 unsigned char *DigitRecognize(unsigned char, unsigned char *);
+void IcvprCcaByTwoPass(const cv::Mat&, cv::Mat&);
+cv::Scalar IcvprGetRandomColor();
+void IcvprLabelColor(const cv::Mat& _labelImg, cv::Mat& _colorLabelImg);
 
 int main(int argc,char** argv)
 {
@@ -55,7 +59,9 @@ unsigned char *DigitRecognize(unsigned char type, unsigned char *imageBuf) {
     double Tmin;;
     minMaxIdx(src_gray,&Tmin,&Tmax);
     T = ( Tmax + Tmin ) / 2;
-    printf("\n%f, %f\n", Tmin, Tmax);
+    
+    printf("Brightness MIN, MAX: %f, %f\n", Tmin, Tmax);
+    
     while(true)
     {
         
@@ -86,7 +92,7 @@ unsigned char *DigitRecognize(unsigned char type, unsigned char *imageBuf) {
     }
     
     
-    threshold(src_gray,dst,T,255,THRESH_BINARY);
+    threshold(src_gray,dst,T,1,THRESH_BINARY);
     imshow("threshold",dst);
     
     //ø±µ»
@@ -111,12 +117,13 @@ unsigned char *DigitRecognize(unsigned char type, unsigned char *imageBuf) {
     }
     
     int n = 1;
+    
     for(int x = 0;x< 2;x++){
-        for(int i = 1;i< dst.rows;i++)   //§¿∏s
+        for(int i = 1;i< dst.rows - 1;i++)   //§¿∏s
         {
             for(int j = 1 ;j<dst.cols-1;j++)
             {
-                if(dst.at<uchar>(i,j) == 255)
+                if(dst.at<uchar>(i,j) == 1)
                 {
                     if(iarry[i-1][j+1] ==0 && iarry[i][j-1] ==0 && iarry[i-1][j] ==0)//(B L U)
                         iarry[i][j] = n++;  //N=new
@@ -137,6 +144,23 @@ unsigned char *DigitRecognize(unsigned char type, unsigned char *imageBuf) {
             }
         }
     }
+    
+    // CCL ->
+    cv::Mat labelImg ;
+    IcvprCcaByTwoPass(dst, labelImg) ;
+    
+    // show result
+    cv::Mat grayImg ;
+    labelImg *= 10 ;
+    labelImg.convertTo(grayImg, CV_8UC1) ;
+    cv::imshow("labelImg", grayImg) ;
+    
+    cv::Mat colorLabelImg ;
+    IcvprLabelColor(labelImg, colorLabelImg) ;
+    cv::imshow("colorImg", colorLabelImg) ;
+    // CCL <-
+    
+    printf("Label Numberic: %d\n", n);
     
     
     for(int i = 0;i< dst.rows;i++)  //¥˙∏’πœ
@@ -170,7 +194,7 @@ unsigned char *DigitRecognize(unsigned char type, unsigned char *imageBuf) {
     {
         if(sum[i] > 75)
             sum[i] =0;
-        if(sum[i]< 25)
+        if(sum[i]< 0)
             sum[i] = 0;
     }
     for(int i = 0;i< dst.rows;i++) // ≤M∞£øzøÔµ≤™G
@@ -191,8 +215,8 @@ unsigned char *DigitRecognize(unsigned char type, unsigned char *imageBuf) {
     Canny(dst,dst,0,50,5);  //´ÿ•ﬂΩ¸π¯Canny
     imshow("canny",dst);
     
-    //vector<vector<Point>> approx;  //¥Mß‰Ω¸π¯
-    //findContours(dst,approx,CV_RETR_LIST,CV_CHAIN_APPROX_SIMPLE);
+//    vector<vector<Point>> approx;  //¥Mß‰Ω¸π¯
+//    findContours(dst,approx,CV_RETR_LIST,CV_CHAIN_APPROX_SIMPLE);
     
     int xx = 0;
     //for(size_t i = 0;i<approx.size()-1;i++)  //≠p∫‚•≠ß°Æyº–
@@ -225,10 +249,14 @@ unsigned char *DigitRecognize(unsigned char type, unsigned char *imageBuf) {
     namedWindow( "02", CV_WINDOW_AUTOSIZE );
     namedWindow( "03", CV_WINDOW_AUTOSIZE );
     namedWindow( "canny", CV_WINDOW_AUTOSIZE );
+    namedWindow( "labelImg", CV_WINDOW_AUTOSIZE );
+    namedWindow( "colorImg", CV_WINDOW_AUTOSIZE );
     moveWindow( "threshold", 0, 0 + HEIGHT * 2 );
     moveWindow( "02", 0, 0 + HEIGHT * 4 );
     moveWindow( "03", 0, 0 + HEIGHT * 6 );
     moveWindow( "canny", 0, 0 + HEIGHT * 8 );
+    moveWindow( "labelImg", WIDTH * 2, 0 + HEIGHT * 0 );
+    moveWindow( "colorImg", WIDTH * 2, 0 + HEIGHT * 2 );
     
     result[0] = 0;  //0:成功 非0:失敗
     result[1] = 63; //0~9:辨識值 63:無法辨識
@@ -242,3 +270,168 @@ unsigned char *DigitRecognize(unsigned char type, unsigned char *imageBuf) {
 #endif
     return result;
 };
+
+void IcvprCcaByTwoPass(const cv::Mat& _binImg, cv::Mat& _lableImg)
+{
+    // connected component analysis (4-component)
+    // use two-pass algorithm
+    // 1. first pass: label each foreground pixel with a label
+    // 2. second pass: visit each labeled pixel and merge neighbor labels
+    //
+    // foreground pixel: _binImg(x,y) = 1
+    // background pixel: _binImg(x,y) = 0
+    
+    
+    if (_binImg.empty() ||
+        _binImg.type() != CV_8UC1)
+    {
+        return ;
+    }
+    
+    // 1. first pass
+    
+    _lableImg.release() ;
+    _binImg.convertTo(_lableImg, CV_32SC1) ;
+    
+    int label = 1 ;  // start by 2
+    std::vector<int> labelSet ;
+    labelSet.push_back(0) ;   // background: 0
+    labelSet.push_back(1) ;   // foreground: 1
+    
+    int rows = _binImg.rows - 1 ;
+    int cols = _binImg.cols - 1 ;
+    for (int i = 1; i < rows; i++)
+    {
+        int* data_preRow = _lableImg.ptr<int>(i-1) ;
+        int* data_curRow = _lableImg.ptr<int>(i) ;
+        for (int j = 1; j < cols; j++)
+        {
+            if (data_curRow[j] == 1)
+            {
+                std::vector<int> neighborLabels ;
+                neighborLabels.reserve(2) ;
+                int leftPixel = data_curRow[j-1] ;
+                int upPixel = data_preRow[j] ;
+                if ( leftPixel > 1)
+                {
+                    neighborLabels.push_back(leftPixel) ;
+                }
+                if (upPixel > 1)
+                {
+                    neighborLabels.push_back(upPixel) ;
+                }
+                
+                if (neighborLabels.empty())
+                {
+                    labelSet.push_back(++label) ;  // assign to a new label
+                    data_curRow[j] = label ;
+                    labelSet[label] = label ;
+                }
+                else
+                {
+                    std::sort(neighborLabels.begin(), neighborLabels.end()) ;
+                    int smallestLabel = neighborLabels[0] ;
+                    data_curRow[j] = smallestLabel ;
+                    
+                    // save equivalence
+                    for (size_t k = 1; k < neighborLabels.size(); k++)
+                    {
+                        int tempLabel = neighborLabels[k] ;
+                        int& oldSmallestLabel = labelSet[tempLabel] ;
+                        if (oldSmallestLabel > smallestLabel)
+                        {
+                            labelSet[oldSmallestLabel] = smallestLabel ;
+                            oldSmallestLabel = smallestLabel ;
+                        }
+                        else if (oldSmallestLabel < smallestLabel)
+                        {
+                            labelSet[smallestLabel] = oldSmallestLabel ;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    // update equivalent labels
+    // assigned with the smallest label in each equivalent label set
+    for (size_t i = 2; i < labelSet.size(); i++)
+    {
+        int curLabel = labelSet[i] ;
+        int preLabel = labelSet[curLabel] ;
+        while (preLabel != curLabel)
+        {
+            curLabel = preLabel ;
+            preLabel = labelSet[preLabel] ;
+        }
+        labelSet[i] = curLabel ;
+    }
+    
+    
+    // 2. second pass
+    for (int i = 0; i < rows + 1; i++)
+    {
+        int* data = _lableImg.ptr<int>(i) ;
+        for (int j = 0; j < cols + 1; j++)
+        {
+            int& pixelLabel = data[j] ;
+            pixelLabel = labelSet[pixelLabel] ;
+        }  
+    }
+    
+    cout << "CCL : " << labelSet.size() << endl;
+}
+
+cv::Scalar IcvprGetRandomColor()
+{
+    uchar r = 255 * (rand()/(1.0 + RAND_MAX));
+    uchar g = 255 * (rand()/(1.0 + RAND_MAX));
+    uchar b = 255 * (rand()/(1.0 + RAND_MAX));
+    return cv::Scalar(b,g,r) ;
+}
+
+
+void IcvprLabelColor(const cv::Mat& _labelImg, cv::Mat& _colorLabelImg)
+{
+    if (_labelImg.empty() ||
+        _labelImg.type() != CV_32SC1)
+    {
+        return ;
+    }
+    
+    std::map<int, cv::Scalar> colors ;
+    
+    int rows = _labelImg.rows ;
+    int cols = _labelImg.cols ;
+    
+    _colorLabelImg.release() ;
+    _colorLabelImg.create(rows, cols, CV_8UC3) ;
+    _colorLabelImg = cv::Scalar::all(0) ;
+    
+    for (int i = 0; i < rows; i++)
+    {
+        const int* data_src = (int*)_labelImg.ptr<int>(i) ;
+        uchar* data_dst = _colorLabelImg.ptr<uchar>(i) ;
+        for (int j = 0; j < cols; j++)
+        {
+            int pixelValue = data_src[j] ;
+            if (pixelValue > 1)
+            {
+                if (colors.count(pixelValue) <= 0)
+                {
+                    colors[pixelValue] = IcvprGetRandomColor() ;
+                }
+                cv::Scalar color = colors[pixelValue] ;
+                *data_dst++   = color[0] ;
+                *data_dst++ = color[1] ;
+                *data_dst++ = color[2] ;
+            }
+            else
+            {
+                data_dst++ ;
+                data_dst++ ;
+                data_dst++ ;
+            }
+        }
+    }
+}

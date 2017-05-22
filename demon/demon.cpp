@@ -10,23 +10,29 @@ using namespace std;
 Mat src_gray,dst;
 Mat erosion_dst, dilation_dst;
 const int WIDTH = 160, HEIGHT = 70;
+//#define PRINTRESULT
 
-unsigned char DigitRecognize(unsigned char, unsigned char *);
+unsigned char *DigitRecognize(unsigned char, unsigned char *);
 
 int main(int argc,char** argv)
 {
 
 	//≈™®˙πœ§˘
 	Mat image = imread(argv[1],CV_LOAD_IMAGE_COLOR);
+    unsigned char *result;
 	if(!image.data)
 	{
 		return -1;
 	}
     
-    DigitRecognize(0, image.data);
+    result = DigitRecognize(0, image.data);
+#ifdef PRINTRESULT
+    printf("%d, %d, %d, %d, %d", result[0], result[1], result[2], result[3], result[4]);
+#endif
 }
 
-unsigned char DigitRecognize(unsigned char type, unsigned char *imageBuf) {
+unsigned char *DigitRecognize(unsigned char type, unsigned char *imageBuf) {
+    static unsigned char result[6];
     Mat src = Mat(HEIGHT, WIDTH, CV_8UC3, imageBuf);
     //¬‡¶«∂•πœ
     cvtColor(src,src_gray,COLOR_BGR2GRAY);
@@ -214,7 +220,15 @@ unsigned char DigitRecognize(unsigned char type, unsigned char *imageBuf) {
     //	}
     //}
     
+    result[0] = 0;  //0:成功 非0:失敗
+    result[1] = 63; //0~9:辨識值 63:無法辨識
+    result[2] = 63; //0~9:辨識值 63:無法辨識
+    result[3] = 63; //0~9:辨識值 63:無法辨識
+    result[4] = 63; //0~9:辨識值 63:無法辨識
+    result[5] = 63; //0~9:辨識值 63:無法辨識
     
+#ifndef PRINTRESULT
     waitKey(0);
-    return 0;
+#endif
+    return result;
 };

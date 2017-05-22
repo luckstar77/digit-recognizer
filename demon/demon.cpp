@@ -194,7 +194,7 @@ unsigned char *DigitRecognize(unsigned char type, unsigned char *imageBuf) {
     {
         if(sum[i] > 75)
             sum[i] =0;
-        if(sum[i]< 0)
+        if(sum[i]< 25)
             sum[i] = 0;
     }
     for(int i = 0;i< dst.rows;i++) // ≤M∞£øzøÔµ≤™G

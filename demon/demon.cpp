@@ -8,12 +8,12 @@
 using namespace cv;
 using namespace std;
 
-Mat src_gray,dst;
 Mat erosion_dst, dilation_dst;
 const int WIDTH = 160, HEIGHT = 70;
 //#define PRINTRESULT
 
 unsigned char *DigitRecognize(unsigned char, unsigned char *);
+unsigned char *ALDigitRecognize(unsigned char, unsigned char *);
 void IcvprCcaByTwoPass(const cv::Mat&, cv::Mat&);
 cv::Scalar IcvprGetRandomColor();
 void IcvprLabelColor(const cv::Mat& _labelImg, cv::Mat& _colorLabelImg);
@@ -30,12 +30,17 @@ int main(int argc,char** argv)
 	}
     
     result = DigitRecognize(0, image.data);
+    ALDigitRecognize(0, image.data);
+    
 #ifdef PRINTRESULT
     printf("%d, %d, %d, %d, %d", result[0], result[1], result[2], result[3], result[4]);
+#else
+    waitKey(0);
 #endif
 }
 
 unsigned char *DigitRecognize(unsigned char type, unsigned char *imageBuf) {
+    Mat src_gray,dst;
     static unsigned char result[6];
     Mat src = Mat(HEIGHT, WIDTH, CV_8UC3, imageBuf);
     //¬‡¶«∂•πœ
@@ -92,7 +97,7 @@ unsigned char *DigitRecognize(unsigned char type, unsigned char *imageBuf) {
     }
     
     
-    threshold(src_gray,dst,T,1,THRESH_BINARY);
+    threshold(src_gray,dst,T,255,THRESH_BINARY);
     imshow("threshold",dst);
     
     //ø±µ»
@@ -123,7 +128,7 @@ unsigned char *DigitRecognize(unsigned char type, unsigned char *imageBuf) {
         {
             for(int j = 1 ;j<dst.cols-1;j++)
             {
-                if(dst.at<uchar>(i,j) == 1)
+                if(dst.at<uchar>(i,j) == 255)
                 {
                     if(iarry[i-1][j+1] ==0 && iarry[i][j-1] ==0 && iarry[i-1][j] ==0)//(B L U)
                         iarry[i][j] = n++;  //N=new
@@ -144,21 +149,6 @@ unsigned char *DigitRecognize(unsigned char type, unsigned char *imageBuf) {
             }
         }
     }
-    
-    // CCL ->
-    cv::Mat labelImg ;
-    IcvprCcaByTwoPass(dst, labelImg) ;
-    
-    // show result
-    cv::Mat grayImg ;
-    labelImg *= 10 ;
-    labelImg.convertTo(grayImg, CV_8UC1) ;
-    cv::imshow("labelImg", grayImg) ;
-    
-    cv::Mat colorLabelImg ;
-    IcvprLabelColor(labelImg, colorLabelImg) ;
-    cv::imshow("colorImg", colorLabelImg) ;
-    // CCL <-
     
     printf("Label Numberic: %d\n", n);
     
@@ -249,14 +239,10 @@ unsigned char *DigitRecognize(unsigned char type, unsigned char *imageBuf) {
     namedWindow( "02", CV_WINDOW_AUTOSIZE );
     namedWindow( "03", CV_WINDOW_AUTOSIZE );
     namedWindow( "canny", CV_WINDOW_AUTOSIZE );
-    namedWindow( "labelImg", CV_WINDOW_AUTOSIZE );
-    namedWindow( "colorImg", CV_WINDOW_AUTOSIZE );
     moveWindow( "threshold", 0, 0 + HEIGHT * 2 );
     moveWindow( "02", 0, 0 + HEIGHT * 4 );
     moveWindow( "03", 0, 0 + HEIGHT * 6 );
     moveWindow( "canny", 0, 0 + HEIGHT * 8 );
-    moveWindow( "labelImg", WIDTH * 2, 0 + HEIGHT * 0 );
-    moveWindow( "colorImg", WIDTH * 2, 0 + HEIGHT * 2 );
     
     result[0] = 0;  //0:成功 非0:失敗
     result[1] = 63; //0~9:辨識值 63:無法辨識
@@ -265,9 +251,88 @@ unsigned char *DigitRecognize(unsigned char type, unsigned char *imageBuf) {
     result[4] = 63; //0~9:辨識值 63:無法辨識
     result[5] = 63; //0~9:辨識值 63:無法辨識
     
-#ifndef PRINTRESULT
-    waitKey(0);
-#endif
+    return result;
+};
+
+
+unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf) {
+    Mat src_gray,dst,thres;
+    static unsigned char result[6];
+    Mat src = Mat(HEIGHT, WIDTH, CV_8UC3, imageBuf);
+    
+    cvtColor(src,src_gray,COLOR_BGR2GRAY);
+    imshow("Grayimage",src_gray);
+    
+    int T =0;
+    double Tmax;
+    double Tmin;;
+    minMaxIdx(src_gray,&Tmin,&Tmax);
+    T = ( Tmax + Tmin ) / 2;
+    
+    printf("Brightness MIN, MAX: %f, %f\n", Tmin, Tmax);
+    
+    while(true)
+    {
+        
+        int Tosum =0,Tusum =0; //osum∂WπLT•[¡` usum §p©ÛT•[¡`
+        int on = 0,un =0;  //on∂WπLT™∫¡`º∆ un §p©ÛT™∫¡`º∆
+        for(int i = 0;i<src_gray.rows;i++)
+        {
+            for(int j = 0 ;j <src_gray.cols; j++)
+            {
+                if(src_gray.at<uchar>(i,j) >= T )
+                {
+                    Tosum += src_gray.at<uchar>(i,j);
+                    on ++;
+                }
+                else
+                {
+                    Tusum += src_gray.at<uchar>(i,j);
+                    un ++;
+                }
+            }
+        }
+        Tosum /=on;
+        Tusum /=un;
+        if((Tosum+Tusum) /2  != T)
+            T = (Tosum+Tusum) /2;
+        else
+            break;
+    }
+    
+    
+    threshold(src_gray,dst,T,255,THRESH_BINARY);
+    threshold(src_gray,thres,T,1,THRESH_BINARY);
+    imshow("ALthreshold",dst);
+    
+    cv::Mat labelImg ;
+    IcvprCcaByTwoPass(thres, labelImg) ;
+    
+    // show result
+    cv::Mat grayImg ;
+    labelImg *= 10 ;
+    labelImg.convertTo(grayImg, CV_8UC1) ;
+    cv::imshow("labelImg", grayImg) ;
+    
+    cv::Mat colorLabelImg ;
+    IcvprLabelColor(labelImg, colorLabelImg) ;
+    cv::imshow("colorImg", colorLabelImg) ;
+    
+    namedWindow( "ALthreshold", CV_WINDOW_AUTOSIZE );
+    namedWindow( "labelImg", CV_WINDOW_AUTOSIZE );
+    namedWindow( "colorImg", CV_WINDOW_AUTOSIZE );
+    
+    moveWindow( "ALthreshold", WIDTH * 2, 0 + HEIGHT * 0 );
+    moveWindow( "labelImg", WIDTH * 2, 0 + HEIGHT * 2 );
+    moveWindow( "colorImg", WIDTH * 2, 0 + HEIGHT * 4 );
+    
+    result[0] = 0;  //0:成功 非0:失敗
+    result[1] = 63; //0~9:辨識值 63:無法辨識
+    result[2] = 63; //0~9:辨識值 63:無法辨識
+    result[3] = 63; //0~9:辨識值 63:無法辨識
+    result[4] = 63; //0~9:辨識值 63:無法辨識
+    result[5] = 63; //0~9:辨識值 63:無法辨識
+    
     return result;
 };
 

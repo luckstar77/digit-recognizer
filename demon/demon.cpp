@@ -55,6 +55,7 @@ unsigned char *DigitRecognize(unsigned char type, unsigned char *imageBuf) {
     double Tmin;;
     minMaxIdx(src_gray,&Tmin,&Tmax);
     T = ( Tmax + Tmin ) / 2;
+    printf("\n%f, %f\n", Tmin, Tmax);
     while(true)
     {
         
@@ -219,6 +220,15 @@ unsigned char *DigitRecognize(unsigned char type, unsigned char *imageBuf) {
     //		imshow(buffer,roi);
     //	}
     //}
+    
+    namedWindow( "threshold", CV_WINDOW_AUTOSIZE );
+    namedWindow( "02", CV_WINDOW_AUTOSIZE );
+    namedWindow( "03", CV_WINDOW_AUTOSIZE );
+    namedWindow( "canny", CV_WINDOW_AUTOSIZE );
+    moveWindow( "threshold", 0, 0 + HEIGHT * 2 );
+    moveWindow( "02", 0, 0 + HEIGHT * 4 );
+    moveWindow( "03", 0, 0 + HEIGHT * 6 );
+    moveWindow( "canny", 0, 0 + HEIGHT * 8 );
     
     result[0] = 0;  //0:成功 非0:失敗
     result[1] = 63; //0~9:辨識值 63:無法辨識

@@ -41,25 +41,25 @@ ALRect::ALRect(int ltx, int lty, int width, int height, int count = 0) {
 
 void ALRect::SetLtx(int ltx) {
     _ltx = ltx;
-    _width = _rdx - _ltx;
+    _width = _rdx - _ltx + 1;
     _cx = _ltx + _width / 2;
 }
 
 void ALRect::SetLty(int lty) {
     _lty = lty;
-    _height = _rdy - _lty;
+    _height = _rdy - _lty + 1;
     _cy = _lty + _height / 2;
 }
 
 void ALRect::SetRdx(int rdx) {
     _rdx = rdx;
-    _width = _rdx - _ltx;
+    _width = _rdx - _ltx + 1;
     _cx = _ltx + _width / 2;
 }
 
 void ALRect::SetRdy(int rdy) {
     _rdy = rdy;
-    _height = _rdy - _lty;
+    _height = _rdy - _lty + 1;
     _cy = _lty + _height / 2;
 }
 

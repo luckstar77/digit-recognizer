@@ -3,13 +3,15 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <stdlib.h>
 #include <stdio.h>
-# include <iostream>
+#include <iostream>
+#include "ALRect.hpp"
 
 using namespace cv;
 using namespace std;
 
 Mat erosion_dst, dilation_dst;
 const int WIDTH = 160, HEIGHT = 70;
+map<int, ALRect> component;
 //#define PRINTRESULT
 
 unsigned char *DigitRecognize(unsigned char, unsigned char *);
@@ -314,6 +316,31 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf) {
     labelImg.convertTo(grayImg, CV_8UC1) ;
     cv::imshow("labelImg", grayImg) ;
     
+    int counts = 0;
+    map<int, ALRect>::iterator iter;
+    for(iter = component.begin(); iter != component.end(); iter++) {
+        int x = iter->second._ltx;
+        int y = iter->second._lty;
+        int width = iter->second._width;
+        int height = iter->second._height;
+        int count = iter->second._count;
+        int cy = HEIGHT / 2;
+        bool isShow = y <= cy && y + height >= cy && count >= 15 && count <= 75 ? true : false;
+        char title[] = {};
+        
+        if(isShow) {
+            sprintf(title, "component : %d", iter->first);
+
+            cout << "component ltx, lty, width, height, count : " << iter->second._ltx << ", " << iter->second._lty << ", " << iter->second._width << ", " << iter->second._height << ", " << iter->second._count << endl;
+
+            Mat roi = grayImg( Rect(iter->second._ltx,iter->second._lty,iter->second._width,iter->second._height) );
+            
+            imshow(title,roi);
+            namedWindow( title, CV_WINDOW_AUTOSIZE );
+            moveWindow( title, WIDTH * 4, 0 + HEIGHT * (counts++) );
+        }
+    }
+    
     cv::Mat colorLabelImg ;
     IcvprLabelColor(labelImg, colorLabelImg) ;
     cv::imshow("colorImg", colorLabelImg) ;
@@ -374,7 +401,7 @@ void IcvprCcaByTwoPass(const cv::Mat& _binImg, cv::Mat& _lableImg)
             if (data_curRow[j] == 1)
             {
                 std::vector<int> neighborLabels ;
-                neighborLabels.reserve(2) ;
+//                neighborLabels.reserve(2) ;
                 int leftPixel = data_curRow[j-1] ;
                 int upPixel = data_preRow[j] ;
                 if ( leftPixel > 1)
@@ -402,11 +429,11 @@ void IcvprCcaByTwoPass(const cv::Mat& _binImg, cv::Mat& _lableImg)
                     for (size_t k = 1; k < neighborLabels.size(); k++)
                     {
                         int tempLabel = neighborLabels[k] ;
-                        int& oldSmallestLabel = labelSet[tempLabel] ;
+                        int oldSmallestLabel = labelSet[tempLabel] ;
                         if (oldSmallestLabel > smallestLabel)
                         {
                             labelSet[oldSmallestLabel] = smallestLabel ;
-                            oldSmallestLabel = smallestLabel ;
+//                            oldSmallestLabel = smallestLabel ;
                         }
                         else if (oldSmallestLabel < smallestLabel)
                         {
@@ -441,9 +468,24 @@ void IcvprCcaByTwoPass(const cv::Mat& _binImg, cv::Mat& _lableImg)
         {
             int& pixelLabel = data[j] ;
             pixelLabel = labelSet[pixelLabel] ;
-        }  
+            
+            if(component.find(pixelLabel) != component.end()) {
+                if(component[pixelLabel]._ltx > j)
+                    component[pixelLabel].SetLtx(j);
+                if(component[pixelLabel]._lty > i)
+                    component[pixelLabel].SetLty(i);
+                if(component[pixelLabel]._rdx < j)
+                    component[pixelLabel].SetRdx(j);
+                if(component[pixelLabel]._rdy < i)
+                    component[pixelLabel].SetRdy(i);
+                component[pixelLabel].AddCount(1);
+            } else {
+                component[pixelLabel] = ALRect(j, i, 1, 1, 1);
+            }
+        }
     }
     
+    cout << "component : " << component.size() << endl;
     cout << "CCL : " << labelSet.size() << endl;
 }
 

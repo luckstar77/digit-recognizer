@@ -31,7 +31,6 @@ int main(int argc,char** argv)
 		return -1;
 	}
     
-    //result = DigitRecognize(0, image.data);
     WIDTH = image.cols;
     HEIGHT = image.rows;
     

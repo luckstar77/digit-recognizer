@@ -10,7 +10,7 @@ using namespace cv;
 using namespace std;
 
 Mat erosion_dst, dilation_dst;
-const int WIDTH = 160, HEIGHT = 70;
+int WIDTH = 160, HEIGHT = 70;
 map<int, ALRect> component;
 //#define PRINTRESULT
 
@@ -32,6 +32,10 @@ int main(int argc,char** argv)
 	}
     
     //result = DigitRecognize(0, image.data);
+    WIDTH = image.cols;
+    HEIGHT = image.rows;
+    
+    result = DigitRecognize(0, image.data);
     ALDigitRecognize(0, image.data);
     
 #ifdef PRINTRESULT

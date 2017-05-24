@@ -325,7 +325,7 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf) {
         int height = iter->second._height;
         int count = iter->second._count;
         int cy = HEIGHT / 2;
-        bool isShow = y <= cy && y + height >= cy && count >= 15 && count <= 75 ? true : false;
+        bool isShow = y <= cy && y + height >= cy && count >= 15 && count <= 100 ? true : false;
         char title[] = {};
         
         if(isShow) {
@@ -469,18 +469,20 @@ void IcvprCcaByTwoPass(const cv::Mat& _binImg, cv::Mat& _lableImg)
             int& pixelLabel = data[j] ;
             pixelLabel = labelSet[pixelLabel] ;
             
-            if(component.find(pixelLabel) != component.end()) {
-                if(component[pixelLabel]._ltx > j)
-                    component[pixelLabel].SetLtx(j);
-                if(component[pixelLabel]._lty > i)
-                    component[pixelLabel].SetLty(i);
-                if(component[pixelLabel]._rdx < j)
-                    component[pixelLabel].SetRdx(j);
-                if(component[pixelLabel]._rdy < i)
-                    component[pixelLabel].SetRdy(i);
-                component[pixelLabel].AddCount(1);
-            } else {
-                component[pixelLabel] = ALRect(j, i, 1, 1, 1);
+            if(pixelLabel > 1) {
+                if(component.find(pixelLabel) != component.end()) {
+                    if(component[pixelLabel]._ltx > j)
+                        component[pixelLabel].SetLtx(j);
+                    if(component[pixelLabel]._lty > i)
+                        component[pixelLabel].SetLty(i);
+                    if(component[pixelLabel]._rdx < j)
+                        component[pixelLabel].SetRdx(j);
+                    if(component[pixelLabel]._rdy < i)
+                        component[pixelLabel].SetRdy(i);
+                    component[pixelLabel].AddCount(1);
+                } else {
+                    component[pixelLabel] = ALRect(j, i, 1, 1, 1);
+                }
             }
         }
     }

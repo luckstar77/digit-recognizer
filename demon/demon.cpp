@@ -343,8 +343,6 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf) {
         int cy = HEIGHT / 2;
         bool isShow = y <= cy && y + height >= cy && count >= 15 && count <= 150 && height >=10 && height < 20 ? true : false;
 		char title[100] ;
-        bool isShow = y <= cy && y + height >= cy && count >= 15 && count <= 100 ? true : false;
-        char title[] = {};
         
         if(isShow) {
             sprintf(title, "component : %d", iter->first);

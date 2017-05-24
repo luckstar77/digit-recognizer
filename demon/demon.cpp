@@ -31,7 +31,7 @@ int main(int argc,char** argv)
 		return -1;
 	}
     
-    result = DigitRecognize(0, image.data);
+    //result = DigitRecognize(0, image.data);
     ALDigitRecognize(0, image.data);
     
 #ifdef PRINTRESULT
@@ -100,7 +100,7 @@ unsigned char *DigitRecognize(unsigned char type, unsigned char *imageBuf) {
     
     
     threshold(src_gray,dst,T,255,THRESH_BINARY);
-    imshow("threshold",dst);
+    //imshow("threshold",dst);
     
     //ø±µ»
     //erode(dst,dst,Mat(),Point(-1,-1),1);
@@ -168,7 +168,7 @@ unsigned char *DigitRecognize(unsigned char type, unsigned char *imageBuf) {
                 dst.at<uchar>(i,j) = 0;
         }
     }
-    imshow("02",dst);
+    //imshow("02",dst);
     
     int* sum = new int[n];
     for(int i =0;i<n;i++) //™Ï©l§∆
@@ -202,10 +202,10 @@ unsigned char *DigitRecognize(unsigned char type, unsigned char *imageBuf) {
                 dst.at<uchar>(i,j) = 0;
         }
     }
-    imshow("03",dst);
+    //imshow("03",dst);
     
     Canny(dst,dst,0,50,5);  //´ÿ•ﬂΩ¸π¯Canny
-    imshow("canny",dst);
+    //imshow("canny",dst);
     
 //    vector<vector<Point>> approx;  //¥Mß‰Ω¸π¯
 //    findContours(dst,approx,CV_RETR_LIST,CV_CHAIN_APPROX_SIMPLE);
@@ -264,7 +264,19 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf) {
     
     cvtColor(src,src_gray,COLOR_BGR2GRAY);
     imshow("Grayimage",src_gray);
+   
+	pyrUp(src_gray,src_gray,Size(src.cols*2,src.rows*2));
+	//pyrUp(src_gray,src_gray,Size(src_gray.cols*2,src_gray.rows*2));
+    imshow("up",src_gray);
     
+	dilate(src_gray,src_gray,Mat(),Point(-1,-1),1);
+	erode(src_gray,src_gray,Mat(),Point(-1,-1),1);
+    imshow("1",src_gray);
+
+	//pyrDown(src_gray,src_gray,Size(src_gray.cols/2,src_gray.rows/2));
+	pyrDown(src_gray,src_gray,Size(dst.cols/2,dst.rows/2));
+    imshow("down",src_gray);
+
     int T =0;
     double Tmax;
     double Tmin;;
@@ -325,8 +337,8 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf) {
         int height = iter->second._height;
         int count = iter->second._count;
         int cy = HEIGHT / 2;
-        bool isShow = y <= cy && y + height >= cy && count >= 15 && count <= 75 ? true : false;
-        char title[] = {};
+        bool isShow = y <= cy && y + height >= cy && count >= 15 && count <= 150 && height >=10 && height < 20 ? true : false;
+		char title[100] ;
         
         if(isShow) {
             sprintf(title, "component : %d", iter->first);

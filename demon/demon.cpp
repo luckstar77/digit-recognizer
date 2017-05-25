@@ -1,6 +1,9 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/opencv_modules.hpp>
+#include <opencv2/ml/ml.hpp>
+#include <opencv2/gpu/gpu.hpp>
 #include <stdlib.h>
 #include <stdio.h>
 #include <iostream>
@@ -34,7 +37,7 @@ int main(int argc,char** argv)
     WIDTH = image.cols;
     HEIGHT = image.rows;
     
-    result = DigitRecognize(0, image.data);
+    //result = DigitRecognize(0, image.data);
     ALDigitRecognize(0, image.data);
     
 #ifdef PRINTRESULT
@@ -261,24 +264,19 @@ unsigned char *DigitRecognize(unsigned char type, unsigned char *imageBuf) {
 
 
 unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf) {
-    Mat src_gray,dst,thres;
+   
+	Mat src_gray,dst,thres,src_down;
     static unsigned char result[6];
     Mat src = Mat(HEIGHT, WIDTH, CV_8UC3, imageBuf);
     
     cvtColor(src,src_gray,COLOR_BGR2GRAY);
+	cvtColor(src,src_down,COLOR_BGR2GRAY);
     imshow("Grayimage",src_gray);
    
-	pyrUp(src_gray,src_gray,Size(src.cols*2,src.rows*2));
-	//pyrUp(src_gray,src_gray,Size(src_gray.cols*2,src_gray.rows*2));
-    imshow("up",src_gray);
-    
-	dilate(src_gray,src_gray,Mat(),Point(-1,-1),1);
-	erode(src_gray,src_gray,Mat(),Point(-1,-1),1);
-    imshow("1",src_gray);
 
-	//pyrDown(src_gray,src_gray,Size(src_gray.cols/2,src_gray.rows/2));
-	pyrDown(src_gray,src_gray,Size(dst.cols/2,dst.rows/2));
-    imshow("down",src_gray);
+    medianBlur(src_gray,src_gray,3);
+	dilate(src_gray,src_gray,Mat(),Point(-1,-1),1);
+    //imshow("1",src_gray);
 
     int T =0;
     double Tmax;
@@ -291,8 +289,8 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf) {
     while(true)
     {
         
-        int Tosum =0,Tusum =0; //osum∂WπLT•[¡` usum §p©ÛT•[¡`
-        int on = 0,un =0;  //on∂WπLT™∫¡`º∆ un §p©ÛT™∫¡`º∆
+        int Tosum =0,Tusum =0; 
+        int on = 0,un =0;  
         for(int i = 0;i<src_gray.rows;i++)
         {
             for(int j = 0 ;j <src_gray.cols; j++)
@@ -320,6 +318,7 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf) {
     
     threshold(src_gray,dst,T,255,THRESH_BINARY);
     threshold(src_gray,thres,T,1,THRESH_BINARY);
+	threshold(src_down,src_down,T,255,THRESH_BINARY);
     imshow("ALthreshold",dst);
     
     cv::Mat labelImg ;
@@ -330,7 +329,12 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf) {
     labelImg *= 10 ;
     labelImg.convertTo(grayImg, CV_8UC1) ;
     cv::imshow("labelImg", grayImg) ;
-    
+    CvSVM svm;
+	svm.load("D:\\OCR\\digital-recognize\\demon\\HOG_SVM_DATA.xml");
+    Mat trainTempImg= Mat(Size(28,28),8,3);
+	
+	//cvZero(trainTempImg);
+	trainTempImg.setTo(Scalar::all(0));
     int counts = 0;
     map<int, ALRect>::iterator iter;
     for(iter = component.begin(); iter != component.end(); iter++) {
@@ -340,26 +344,37 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf) {
         int height = iter->second._height;
         int count = iter->second._count;
         int cy = HEIGHT / 2;
-        bool isShow = y <= cy && y + height >= cy && count >= 15 && count <= 150 && height >=10 && height < 20 ? true : false;
-		char title[100] ;
-        
+        bool isShow =  y + height >= cy && count >= 100 && count <= 560 && height >=15 && height < 35 ? true : false;
+		char title[1000] ;        
         if(isShow) {
             sprintf(title, "component : %d", iter->first);
-
             cout << "component ltx, lty, width, height, count : " << iter->second._ltx << ", " << iter->second._lty << ", " << iter->second._width << ", " << iter->second._height << ", " << iter->second._count << endl;
-
-            Mat roi = grayImg( Rect(iter->second._ltx,iter->second._lty,iter->second._width,iter->second._height) );
-            
+            Mat roi = src_down( Rect(iter->second._ltx,iter->second._lty,iter->second._width,iter->second._height) );            
             imshow(title,roi);
             namedWindow( title, CV_WINDOW_AUTOSIZE );
             moveWindow( title, WIDTH * 4, 0 + HEIGHT * (counts++) );
+			resize(roi,trainTempImg,Size(28,28));
+			HOGDescriptor *hog= new HOGDescriptor (cvSize(28,28),cvSize(14,14),cvSize(7,7),cvSize(7,7),9);
+			vector<float> descriptors;
+			hog->compute(trainTempImg,descriptors,Size(1,1),Size(0,0));
+			printf("Hog dims: %d \n",descriptors.size());
+			CvMat* SVMtrainMat = cvCreateMat(1,descriptors.size(),CV_32FC1);
+			int n =0;
+			for(vector<float>::iterator iter=descriptors.begin();iter!=descriptors.end();iter++)
+			{
+				cvmSet(SVMtrainMat,0,n,*iter);
+				n++;
+			}
+			int ret = svm.predict(SVMtrainMat);
+			printf("result: %d \n",ret);
         }
     }
     
     cv::Mat colorLabelImg ;
     IcvprLabelColor(labelImg, colorLabelImg) ;
     cv::imshow("colorImg", colorLabelImg) ;
-    
+	
+	
     namedWindow( "ALthreshold", CV_WINDOW_AUTOSIZE );
     namedWindow( "labelImg", CV_WINDOW_AUTOSIZE );
     namedWindow( "colorImg", CV_WINDOW_AUTOSIZE );

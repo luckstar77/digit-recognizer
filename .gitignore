@@ -326,3 +326,4 @@ __pycache__/
 *.sln
 *.vcxproj
 *.filters
+train/

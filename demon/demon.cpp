@@ -28,7 +28,6 @@ int main(int argc,char** argv)
 
 	//≈™®˙πœ§˘
 	Mat image = imread(argv[1],CV_LOAD_IMAGE_COLOR);
-    unsigned char *result;
 	if(!image.data)
 	{
 		return -1;
@@ -49,7 +48,7 @@ int main(int argc,char** argv)
 
 unsigned char *DigitRecognize(unsigned char type, unsigned char *imageBuf) {
     Mat src_gray,dst;
-    static unsigned char result[6];
+    unsigned char result[6];
     Mat src = Mat(HEIGHT, WIDTH, CV_8UC3, imageBuf);
     //¬‡¶«∂•πœ
     cvtColor(src,src_gray,COLOR_BGR2GRAY);
@@ -265,8 +264,8 @@ unsigned char *DigitRecognize(unsigned char type, unsigned char *imageBuf) {
 
 unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf) {
    
-	Mat src_gray,dst,thres,src_down;
-    static unsigned char result[6];
+    Mat src_gray,dst,thres,src_down;
+    unsigned char result[6];
     Mat src = Mat(HEIGHT, WIDTH, CV_8UC3, imageBuf);
     
     cvtColor(src,src_gray,COLOR_BGR2GRAY);
@@ -330,7 +329,7 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf) {
     labelImg.convertTo(grayImg, CV_8UC1) ;
     cv::imshow("labelImg", grayImg) ;
     CvSVM svm;
-	svm.load("D:\\OCR\\digital-recognize\\demon\\HOG_SVM_DATA.xml");
+	svm.load("/work/shintaogas/code/shintao-recognize/demon/gas.xml");
     Mat trainTempImg= Mat(Size(28,28),8,3);
 	
 	//cvZero(trainTempImg);
@@ -352,9 +351,17 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf) {
             Mat roi = src_down( Rect(iter->second._ltx,iter->second._lty,iter->second._width,iter->second._height) );            
             imshow(title,roi);
             namedWindow( title, CV_WINDOW_AUTOSIZE );
-            moveWindow( title, WIDTH * 4, 0 + HEIGHT * (counts++) );
-			resize(roi,trainTempImg,Size(28,28));
-			HOGDescriptor *hog= new HOGDescriptor (cvSize(28,28),cvSize(14,14),cvSize(7,7),cvSize(7,7),9);
+            moveWindow( title, WIDTH * 4, 0 + roi.rows * ((counts++) * 3) );
+            
+            resize(roi,trainTempImg,Size(28,28));
+            
+            sprintf(title, "/work/shintaogas/code/shintao-recognize/train/trainTempImg%d.bmp", iter->first);
+            imshow(title,trainTempImg);
+            namedWindow( title, CV_WINDOW_AUTOSIZE );
+            moveWindow( title, WIDTH * 3, 0 + roi.rows * ((counts - 1) * 3 ));
+            imwrite(title, trainTempImg);
+            
+            HOGDescriptor *hog= new HOGDescriptor (cvSize(28,28),cvSize(14,14),cvSize(7,7),cvSize(7,7),9);
 			vector<float> descriptors;
 			hog->compute(trainTempImg,descriptors,Size(1,1),Size(0,0));
 			printf("Hog dims: %d \n",descriptors.size());
@@ -366,14 +373,13 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf) {
 				n++;
 			}
 			int ret = svm.predict(SVMtrainMat);
-			printf("result: %d \n",ret);
+            result[counts] = ret;
         }
     }
     
     cv::Mat colorLabelImg ;
     IcvprLabelColor(labelImg, colorLabelImg) ;
     cv::imshow("colorImg", colorLabelImg) ;
-	
 	
     namedWindow( "ALthreshold", CV_WINDOW_AUTOSIZE );
     namedWindow( "labelImg", CV_WINDOW_AUTOSIZE );
@@ -383,6 +389,7 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf) {
     moveWindow( "labelImg", WIDTH * 2, 0 + HEIGHT * 2 );
     moveWindow( "colorImg", WIDTH * 2, 0 + HEIGHT * 4 );
     
+    printf("result: %d, %d, %d, %d \n", result[1], result[2], result[3], result[4]);
     result[0] = 0;  //0:成功 非0:失敗
     result[1] = 63; //0~9:辨識值 63:無法辨識
     result[2] = 63; //0~9:辨識值 63:無法辨識

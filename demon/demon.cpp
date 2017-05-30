@@ -331,7 +331,7 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf) {
     CvSVM svm;
 	svm.load("/work/shintaogas/code/shintao-recognize/demon/gas.xml");
     Mat trainTempImg= Mat(Size(28,28),8,3);
-	
+	//
 	//cvZero(trainTempImg);
 	trainTempImg.setTo(Scalar::all(0));
     int counts = 0;

@@ -1,2 +1,2 @@
-# digital-recognize
-digital recognize
+# digit recognizer
+digit recognizer

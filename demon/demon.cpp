@@ -15,6 +15,7 @@ using namespace std;
 Mat erosion_dst, dilation_dst;
 int WIDTH = 160, HEIGHT = 70;
 map<int, ALRect> component;
+vector<ALRect> numeric;
 //#define PRINTRESULT
 
 unsigned char *DigitRecognize(unsigned char, unsigned char *);
@@ -261,6 +262,11 @@ unsigned char *DigitRecognize(unsigned char type, unsigned char *imageBuf) {
     return result;
 };
 
+bool SortLtx(const ALRect lhs,const ALRect rhs)
+{
+    return lhs._ltx < rhs._ltx ;
+}
+
 
 unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf) {
    
@@ -346,36 +352,49 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf) {
         bool isShow =  y + height >= cy && count >= 100 && count <= 560 && height >=15 && height < 35 ? true : false;
 		char title[1000] ;        
         if(isShow) {
+            numeric.push_back(iter->second);
             sprintf(title, "component : %d", iter->first);
             cout << "component ltx, lty, width, height, count : " << iter->second._ltx << ", " << iter->second._lty << ", " << iter->second._width << ", " << iter->second._height << ", " << iter->second._count << endl;
             Mat roi = src_down( Rect(iter->second._ltx,iter->second._lty,iter->second._width,iter->second._height) );            
             imshow(title,roi);
             namedWindow( title, CV_WINDOW_AUTOSIZE );
             moveWindow( title, WIDTH * 4, 0 + roi.rows * ((counts++) * 3) );
-            
-            resize(roi,trainTempImg,Size(28,28));
-            
-            sprintf(title, "/work/shintaogas/code/shintao-recognize/train/trainTempImg%d.bmp", iter->first);
-            imshow(title,trainTempImg);
-            namedWindow( title, CV_WINDOW_AUTOSIZE );
-            moveWindow( title, WIDTH * 3, 0 + roi.rows * ((counts - 1) * 3 ));
-            imwrite(title, trainTempImg);
-            
-            HOGDescriptor *hog= new HOGDescriptor (cvSize(28,28),cvSize(14,14),cvSize(7,7),cvSize(7,7),9);
-			vector<float> descriptors;
-			hog->compute(trainTempImg,descriptors,Size(1,1),Size(0,0));
-			printf("Hog dims: %d \n",descriptors.size());
-			CvMat* SVMtrainMat = cvCreateMat(1,descriptors.size(),CV_32FC1);
-			int n =0;
-			for(vector<float>::iterator iter=descriptors.begin();iter!=descriptors.end();iter++)
-			{
-				cvmSet(SVMtrainMat,0,n,*iter);
-				n++;
-			}
-			int ret = svm.predict(SVMtrainMat);
-            result[counts] = ret;
         }
     }
+    
+    //
+    sort(numeric.begin(),numeric.end(),SortLtx);
+    
+    for(int i=0; i<numeric.size(); i++) {
+        char title[1000] ;
+        cout << "numeric ltx, lty, width, height, count : " << numeric[i]._ltx << ", " << numeric[i]._lty << ", " << numeric[i]._width << ", " << numeric[i]._height << ", " << numeric[i]._count << endl;
+        sprintf(title, "numeric : %d", i);
+        Mat roi = src_down( Rect(numeric[i]._ltx,numeric[i]._lty,numeric[i]._width,numeric[i]._height) );
+        resize(roi,trainTempImg,Size(28,28));
+        
+        sprintf(title, "/work/shintaogas/code/shintao-recognize/train/trainTempImg%d.bmp", i);
+        imshow(title,trainTempImg);
+        namedWindow( title, CV_WINDOW_AUTOSIZE );
+        moveWindow( title, WIDTH * 1.5, 0 + roi.rows * ((i) * 3 ));
+        imwrite(title, trainTempImg);
+        
+        
+        HOGDescriptor *hog= new HOGDescriptor (cvSize(28,28),cvSize(14,14),cvSize(7,7),cvSize(7,7),9);
+        vector<float> descriptors;
+        hog->compute(trainTempImg,descriptors,Size(1,1),Size(0,0));
+        printf("Hog dims: %d \n",descriptors.size());
+        CvMat* SVMtrainMat = cvCreateMat(1,descriptors.size(),CV_32FC1);
+        int n =0;
+        for(vector<float>::iterator iter=descriptors.begin();iter!=descriptors.end();iter++)
+        {
+            cvmSet(SVMtrainMat,0,n,*iter);
+            n++;
+        }
+        int ret = svm.predict(SVMtrainMat);
+        result[i + 1] = ret;
+
+    }
+    //
     
     cv::Mat colorLabelImg ;
     IcvprLabelColor(labelImg, colorLabelImg) ;

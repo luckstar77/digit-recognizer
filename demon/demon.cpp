@@ -273,16 +273,17 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf) {
     Mat src_gray,dst,thres,src_down;
     unsigned char result[6];
     Mat src = Mat(HEIGHT, WIDTH, CV_8UC3, imageBuf);
-    
+    	
+	src.convertTo(src,-1,1.5,-80);
     cvtColor(src,src_gray,COLOR_BGR2GRAY);
 	cvtColor(src,src_down,COLOR_BGR2GRAY);
     imshow("Grayimage",src_gray);
    
-
-    medianBlur(src_gray,src_gray,3);
-	dilate(src_gray,src_gray,Mat(),Point(-1,-1),1);
-    //imshow("1",src_gray);
-
+	//
+	//dilate(src_gray,src_gray,Mat(),Point(-1,-1),1);
+	medianBlur(src_gray,src_gray,3);
+    medianBlur(src_gray,src_gray,5);
+	imshow("123",src_gray);
     int T =0;
     double Tmax;
     double Tmin;;
@@ -335,7 +336,7 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf) {
     labelImg.convertTo(grayImg, CV_8UC1) ;
     cv::imshow("labelImg", grayImg) ;
     CvSVM svm;
-	svm.load("/work/shintaogas/code/shintao-recognize/demon/gas.xml");
+	svm.load("D:\\OCR\\digital-recognize\\demon\\gas.xml");
     Mat trainTempImg= Mat(Size(28,28),8,3);
 	
 	//cvZero(trainTempImg);
@@ -349,7 +350,7 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf) {
         int height = iter->second._height;
         int count = iter->second._count;
         int cy = HEIGHT / 2;
-        bool isShow =  y + height >= cy && count >= 100 && count <= 560 && height >=15 && height < 35 ? true : false;
+        bool isShow =  y + height >= cy && count >= 100 && count <= 660 && height >=15 && height < 35 ? true : false;
 		char title[1000] ;        
         if(isShow) {
             numeric.push_back(iter->second);
@@ -391,7 +392,7 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf) {
             n++;
         }
         int ret = svm.predict(SVMtrainMat);
-        result[i + 1] = ret;
+        //result[i + 1] = ret;
 
     }
     //
@@ -407,14 +408,15 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf) {
     moveWindow( "ALthreshold", WIDTH * 2, 0 + HEIGHT * 0 );
     moveWindow( "labelImg", WIDTH * 2, 0 + HEIGHT * 2 );
     moveWindow( "colorImg", WIDTH * 2, 0 + HEIGHT * 4 );
-    
-    printf("result: %d, %d, %d, %d \n", result[1], result[2], result[3], result[4]);
+
     result[0] = 0;  //0:成功 非0:失敗
     result[1] = 63; //0~9:辨識值 63:無法辨識
     result[2] = 63; //0~9:辨識值 63:無法辨識
     result[3] = 63; //0~9:辨識值 63:無法辨識
     result[4] = 63; //0~9:辨識值 63:無法辨識
     result[5] = 63; //0~9:辨識值 63:無法辨識
+    printf("result: %d, %d, %d, %d \n", result[1], result[2], result[3], result[4]);
+    
     
     return result;
 };

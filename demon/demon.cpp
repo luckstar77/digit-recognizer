@@ -273,23 +273,22 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf) {
     Mat src_gray,dst,thres,src_down;
     unsigned char result[6];
     Mat src = Mat(HEIGHT, WIDTH, CV_8UC3, imageBuf);
-    	
-	src.convertTo(src,-1,1.5,-80);
+		
     cvtColor(src,src_gray,COLOR_BGR2GRAY);
 	cvtColor(src,src_down,COLOR_BGR2GRAY);
-    imshow("Grayimage",src_gray);
-   
+	src_gray.convertTo(src_gray,-1,1.5,50);
+	equalizeHist(src_gray,src_gray);
+    imshow("Grayimage",src_gray);   
 	//
-	//dilate(src_gray,src_gray,Mat(),Point(-1,-1),1);
+	dilate(src_gray,src_gray,Mat(),Point(-1,-1),1);
 	medianBlur(src_gray,src_gray,3);
-    medianBlur(src_gray,src_gray,5);
-	imshow("123",src_gray);
+    //medianBlur(src_gray,src_gray,5);
+	
     int T =0;
     double Tmax;
     double Tmin;;
     minMaxIdx(src_gray,&Tmin,&Tmax);
-    T = ( Tmax + Tmin ) / 2;
-    
+    T = ( Tmax + Tmin ) / 2;    
     printf("Brightness MIN, MAX: %f, %f\n", Tmin, Tmax);
     
     while(true)
@@ -313,8 +312,23 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf) {
                 }
             }
         }
-        Tosum /=on;
-        Tusum /=un;
+		if(on != 0)
+		{
+			Tosum /=on;
+		}
+		else
+		{
+			Tosum = 0;
+		}
+        if(un != 0)
+		{
+			Tusum /=un;
+		}
+		else
+		{
+			Tusum = 0;
+		}
+        
         if((Tosum+Tusum) /2  != T)
             T = (Tosum+Tusum) /2;
         else
@@ -324,7 +338,7 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf) {
     
     threshold(src_gray,dst,T,255,THRESH_BINARY);
     threshold(src_gray,thres,T,1,THRESH_BINARY);
-	threshold(src_down,src_down,T,255,THRESH_BINARY);
+	threshold(src_down,src_down,T-50,255,THRESH_BINARY);
     imshow("ALthreshold",dst);
     
     cv::Mat labelImg ;
@@ -335,11 +349,11 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf) {
     labelImg *= 10 ;
     labelImg.convertTo(grayImg, CV_8UC1) ;
     cv::imshow("labelImg", grayImg) ;
+
     CvSVM svm;
 	svm.load("D:\\OCR\\digital-recognize\\demon\\gas.xml");
     Mat trainTempImg= Mat(Size(28,28),8,3);
 	
-	//cvZero(trainTempImg);
 	trainTempImg.setTo(Scalar::all(0));
     int counts = 0;
     map<int, ALRect>::iterator iter;
@@ -392,7 +406,7 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf) {
             n++;
         }
         int ret = svm.predict(SVMtrainMat);
-        //result[i + 1] = ret;
+        result[i + 1] = ret;
 
     }
     //
@@ -409,14 +423,14 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf) {
     moveWindow( "labelImg", WIDTH * 2, 0 + HEIGHT * 2 );
     moveWindow( "colorImg", WIDTH * 2, 0 + HEIGHT * 4 );
 
+    
+    printf("result: %d, %d, %d, %d \n", result[1], result[2], result[3], result[4]);
     result[0] = 0;  //0:成功 非0:失敗
     result[1] = 63; //0~9:辨識值 63:無法辨識
     result[2] = 63; //0~9:辨識值 63:無法辨識
     result[3] = 63; //0~9:辨識值 63:無法辨識
     result[4] = 63; //0~9:辨識值 63:無法辨識
     result[5] = 63; //0~9:辨識值 63:無法辨識
-    printf("result: %d, %d, %d, %d \n", result[1], result[2], result[3], result[4]);
-    
     
     return result;
 };

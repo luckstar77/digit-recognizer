@@ -272,17 +272,43 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf) {
    
     Mat src_gray,dst,thres,src_down;
     unsigned char result[6];
+	int light=0;
     Mat src = Mat(HEIGHT, WIDTH, CV_8UC3, imageBuf);
-		
+	
+	
     cvtColor(src,src_gray,COLOR_BGR2GRAY);
 	cvtColor(src,src_down,COLOR_BGR2GRAY);
-	src_gray.convertTo(src_gray,-1,1.5,50);
-	equalizeHist(src_gray,src_gray);
-    imshow("Grayimage",src_gray);   
-	//
-	dilate(src_gray,src_gray,Mat(),Point(-1,-1),1);
-	medianBlur(src_gray,src_gray,3);
-    //medianBlur(src_gray,src_gray,5);
+	while(true)
+	{
+		int piexl[3] = {0};
+		for(int i =0;i<src_gray.rows;i++)
+		{
+			for(int j = 0;j< src_gray.cols;j++)
+			{
+				if(src_gray.at<uchar>(i,j) < 120 ){
+					piexl[0] ++;}
+				else if(src_gray.at<uchar>(i,j) <= 230){
+					piexl[1] ++;}
+				else {
+					piexl[2] ++;}
+			}
+		}
+		if(piexl[0] > (piexl[1]+(src_gray.rows *  src_gray.cols) / 6) && piexl[0] > piexl[2]){
+			src_gray.convertTo(src_gray,-1,1,15);
+			light -=15;
+		}
+		else if(piexl[2] > (piexl[1]+(src_gray.rows *  src_gray.cols) / 6) && piexl[2] > piexl[0]){
+			src_gray.convertTo(src_gray,-1,1,-15);
+			light +=15;
+		}
+		else
+			break;
+	}
+	
+	
+	dilate(src_gray,src_gray,Mat(),Point(-1,-1),1);    
+	//medianBlur(src_gray,src_gray,3);
+	imshow("Grayimage",src_gray); 
 	
     int T =0;
     double Tmax;
@@ -338,7 +364,7 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf) {
     
     threshold(src_gray,dst,T,255,THRESH_BINARY);
     threshold(src_gray,thres,T,1,THRESH_BINARY);
-	threshold(src_down,src_down,T-50,255,THRESH_BINARY);
+	threshold(src_down,src_down,T + light,255,THRESH_BINARY);
     imshow("ALthreshold",dst);
     
     cv::Mat labelImg ;
@@ -364,7 +390,7 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf) {
         int height = iter->second._height;
         int count = iter->second._count;
         int cy = HEIGHT / 2;
-        bool isShow =  y + height >= cy && count >= 100 && count <= 660 && height >=15 && height < 35 ? true : false;
+        bool isShow =  y + height >= cy && count >= 100 && count <= 660 && height >=20 && height < 35 ? true : false;
 		char title[1000] ;        
         if(isShow) {
             numeric.push_back(iter->second);
@@ -406,7 +432,7 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf) {
             n++;
         }
         int ret = svm.predict(SVMtrainMat);
-        result[i + 1] = ret;
+        //result[i + 1] = ret;
 
     }
     //
@@ -423,14 +449,14 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf) {
     moveWindow( "labelImg", WIDTH * 2, 0 + HEIGHT * 2 );
     moveWindow( "colorImg", WIDTH * 2, 0 + HEIGHT * 4 );
 
-    
-    printf("result: %d, %d, %d, %d \n", result[1], result[2], result[3], result[4]);
-    result[0] = 0;  //0:成功 非0:失敗
+        result[0] = 0;  //0:成功 非0:失敗
     result[1] = 63; //0~9:辨識值 63:無法辨識
     result[2] = 63; //0~9:辨識值 63:無法辨識
     result[3] = 63; //0~9:辨識值 63:無法辨識
     result[4] = 63; //0~9:辨識值 63:無法辨識
     result[5] = 63; //0~9:辨識值 63:無法辨識
+    printf("result: %d, %d, %d, %d \n", result[1], result[2], result[3], result[4]);
+
     
     return result;
 };

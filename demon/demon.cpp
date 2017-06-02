@@ -658,3 +658,4 @@ unsigned char SetNumericMax(unsigned char type) {
             return 4;
     }
 }
+

@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <iostream>
 #include "ALRect.hpp"
+#include <sys/time.h>
 
 using namespace cv;
 using namespace std;
@@ -17,6 +18,7 @@ int WIDTH = 160, HEIGHT = 70;
 map<int, ALRect> component;
 vector<ALRect> numeric;
 CvSVM svm;
+
 //#define PRINTRESULT
 
 unsigned char *DigitRecognize(unsigned char, unsigned char *);
@@ -195,7 +197,11 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf) {
         Mat roi = src_down( Rect(numeric[i]._ltx,numeric[i]._lty,numeric[i]._width,numeric[i]._height) );
         resize(roi,trainTempImg,Size(28,28));
         
-        sprintf(title, "/work/shintaogas/code/shintao-recognize/train/trainTempImg%d.bmp", rand());
+        struct timeval tp;
+        gettimeofday(&tp, NULL);
+        long int ms = tp.tv_sec * 1000 + tp.tv_usec / 1000;
+        
+        sprintf(title, "/work/shintaogas/code/shintao-recognize/train/trainTempImg%d.bmp", ms);
         imshow(title,trainTempImg);
         namedWindow( title, CV_WINDOW_AUTOSIZE );
         moveWindow( title, WIDTH * 1.5, 0 + roi.rows * ((i) * 3 ));

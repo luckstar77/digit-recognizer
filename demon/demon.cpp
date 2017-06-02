@@ -25,10 +25,10 @@ void IcvprCcaByTwoPass(const cv::Mat&, cv::Mat&);
 cv::Scalar IcvprGetRandomColor();
 void IcvprLabelColor(const cv::Mat& _labelImg, cv::Mat& _colorLabelImg);
 bool SortLtx(const ALRect lhs,const ALRect rhs);
+unsigned char SetNumericMax(unsigned char type);
 
 int main(int argc,char** argv)
 {
-
 	//≈™®˙πœ§˘
 	Mat image = imread(argv[1],CV_LOAD_IMAGE_COLOR);
 	if(!image.data)
@@ -41,7 +41,7 @@ int main(int argc,char** argv)
     
     svm.load(argv[2]);
     
-    ALDigitRecognize(0, image.data);
+    ALDigitRecognize(*argv[3], image.data);
     
 #ifdef PRINTRESULT
     printf("%d, %d, %d, %d, %d", result[0], result[1], result[2], result[3], result[4]);
@@ -51,11 +51,13 @@ int main(int argc,char** argv)
 }
 
 unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf) {
+    srand(time(NULL));
    
     Mat src_gray,dst,thres,src_down;
     unsigned char result[6];
 	int light=0;
     Mat src = Mat(HEIGHT, WIDTH, CV_8UC3, imageBuf);
+    unsigned char numericMax = SetNumericMax(type);
 	
 	
     cvtColor(src,src_gray,COLOR_BGR2GRAY);
@@ -186,14 +188,14 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf) {
     //
     sort(numeric.begin(),numeric.end(),SortLtx);
     
-    for(int i=0; i<numeric.size(); i++) {
+    for(int i=0; i<numericMax; i++) {
         char title[1000] ;
         cout << "numeric ltx, lty, width, height, count : " << numeric[i]._ltx << ", " << numeric[i]._lty << ", " << numeric[i]._width << ", " << numeric[i]._height << ", " << numeric[i]._count << endl;
         sprintf(title, "numeric : %d", i);
         Mat roi = src_down( Rect(numeric[i]._ltx,numeric[i]._lty,numeric[i]._width,numeric[i]._height) );
         resize(roi,trainTempImg,Size(28,28));
         
-        sprintf(title, "/work/shintaogas/code/shintao-recognize/train/trainTempImg%d.bmp", i);
+        sprintf(title, "/work/shintaogas/code/shintao-recognize/train/trainTempImg%d.bmp", rand());
         imshow(title,trainTempImg);
         namedWindow( title, CV_WINDOW_AUTOSIZE );
         moveWindow( title, WIDTH * 1.5, 0 + roi.rows * ((i) * 3 ));
@@ -212,7 +214,7 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf) {
             n++;
         }
         int ret = svm.predict(SVMtrainMat);
-        //result[i + 1] = ret;
+        result[i + 1] = ret;
 
     }
     //
@@ -229,12 +231,12 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf) {
     moveWindow( "labelImg", WIDTH * 2, 0 + HEIGHT * 2 );
     moveWindow( "colorImg", WIDTH * 2, 0 + HEIGHT * 4 );
 
-        result[0] = 0;  //0:成功 非0:失敗
-    result[1] = 63; //0~9:辨識值 63:無法辨識
-    result[2] = 63; //0~9:辨識值 63:無法辨識
-    result[3] = 63; //0~9:辨識值 63:無法辨識
-    result[4] = 63; //0~9:辨識值 63:無法辨識
-    result[5] = 63; //0~9:辨識值 63:無法辨識
+//    result[0] = 0;  //0:成功 非0:失敗
+//    result[1] = 63; //0~9:辨識值 63:無法辨識
+//    result[2] = 63; //0~9:辨識值 63:無法辨識
+//    result[3] = 63; //0~9:辨識值 63:無法辨識
+//    result[4] = 63; //0~9:辨識值 63:無法辨識
+//    result[5] = 63; //0~9:辨識值 63:無法辨識
     printf("result: %d, %d, %d, %d \n", result[1], result[2], result[3], result[4]);
 
     
@@ -426,4 +428,14 @@ void IcvprLabelColor(const cv::Mat& _labelImg, cv::Mat& _colorLabelImg)
 bool SortLtx(const ALRect lhs,const ALRect rhs)
 {
     return lhs._ltx < rhs._ltx ;
+}
+
+unsigned char SetNumericMax(unsigned char type) {
+    switch(type) {
+        case 0:
+            return 4;
+            break;
+        default:
+            return 4;
+    }
 }

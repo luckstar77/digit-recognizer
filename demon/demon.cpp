@@ -309,9 +309,8 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf) {
 			break;
 	}
 	//equalizeHist(src_gray,src_gray);
-	
-	dilate(src_gray,src_gray,Mat(),Point(-1,-1),1);    
-	//medianBlur(src_gray,src_gray,3);
+	//dilate(src_gray,src_gray,Mat(),Point(-1,-1),1);    
+	medianBlur(src_gray,src_gray,3);
 	imshow("Grayimage",src_gray); 
 	
     int T =0;

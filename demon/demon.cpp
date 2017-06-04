@@ -41,7 +41,7 @@ int main(int argc,char** argv)
 	
     svm.load(argv[2]);
     
-    ALDigitRecognize(*argv[1], image.data);
+    ALDigitRecognize(*argv[3], image.data);
     
 #ifdef PRINTRESULT
     printf("%d, %d, %d, %d, %d", result[0], result[1], result[2], result[3], result[4]);

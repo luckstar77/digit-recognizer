@@ -27,7 +27,6 @@ vector<ALRect> numeric;
 CvSVM svm;
 //#define PRINTRESULT
 
-unsigned char *DigitRecognize(unsigned char, unsigned char *);
 unsigned char *ALDigitRecognize(unsigned char, unsigned char *);
 void IcvprCcaByTwoPass(const cv::Mat&, cv::Mat&);
 cv::Scalar IcvprGetRandomColor();

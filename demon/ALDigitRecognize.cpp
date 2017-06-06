@@ -10,6 +10,7 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/opencv_modules.hpp>
 #include <opencv2/ml/ml.hpp>
+#include <opencv2/objdetect.hpp>
 #include <stdlib.h>
 #include <stdio.h>
 #include <iostream>
@@ -187,7 +188,7 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf, cha
         resize(roi,trainTempImg,Size(28,28));
         Mat trainRoi = Mat(32,32,CV_8U, Scalar(0));
 		int x = (trainRoi.rows /2)-( numeric[i]._width/2);
-		int y = (trainROi.cols /2)-( numeric[i]._height/2);
+		int y = (trainRoi.cols /2)-( numeric[i]._height/2);
 		Mat roi2 = trainRoi(Rect(x,y,roi.cols,roi.rows));
 		addWeighted(roi2,0,roi,1,0,roi2);
 

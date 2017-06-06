@@ -298,12 +298,12 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf) {
 			}
 		}
 		if(piexl[0] > (piexl[1]+(src_gray.rows *  src_gray.cols) / 6) && piexl[0] > piexl[2]){
-			src_gray.convertTo(src_gray,-1,1,15);
-			light -=15;
+			src_gray.convertTo(src_gray,-1,1,5);
+			light -=5;
 		}
 		else if(piexl[2] > (piexl[1]+(src_gray.rows *  src_gray.cols) / 6) && piexl[2] > piexl[0]){
-			src_gray.convertTo(src_gray,-1,1,-15);
-			light +=15;
+			src_gray.convertTo(src_gray,-1,1,-5);
+			light +=5;
 		}
 		else
 			break;
@@ -382,7 +382,8 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf) {
     /*CvSVM svm;
 	svm.load("D:\\OCR\\digital-recognize\\demon\\gas.xml");*/
     Mat trainTempImg= Mat(Size(28,28),8,3);
-	
+
+
 	trainTempImg.setTo(Scalar::all(0));
     int counts = 0;
     map<int, ALRect>::iterator iter;
@@ -393,7 +394,7 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf) {
         int height = iter->second._height;
         int count = iter->second._count;
         int cy = HEIGHT / 2;
-        bool isShow =  y + height >= cy && count >= 100 && count <= 660 && height >=17 && height < 35 ? true : false;
+        bool isShow =  y + height >= cy && count >= 80 && count <= 660 && height >=10 && height < 35 ? true : false;
 		char title[1000] ;        
         if(isShow) {
             numeric.push_back(iter->second);
@@ -414,14 +415,22 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf) {
         cout << "numeric ltx, lty, width, height, count : " << numeric[i]._ltx << ", " << numeric[i]._lty << ", " << numeric[i]._width << ", " << numeric[i]._height << ", " << numeric[i]._count << endl;
         sprintf(title, "numeric : %d", i);
         Mat roi = src_down( Rect(numeric[i]._ltx,numeric[i]._lty,numeric[i]._width,numeric[i]._height) );
-        resize(roi,trainTempImg,Size(28,28));
-        
+		resize(roi,trainTempImg,Size(28,28));
+		
+		Mat trainroi = Mat(32,32,CV_8U,Scalar(0));
+        int x = (trainroi.rows /2) - (numeric[i]._width /2);
+		int y = (trainroi.cols /2)-(numeric[i]._height/2);
+	    Mat roi2 = trainroi(Rect(x,y,roi.cols,roi.rows));			
+		addWeighted(roi,1,roi2,0.1,0,roi2);		
+
+		/*dilate(roi2,roi2,Mat(),Point(-1,-1),1);
+		erode(roi2,roi2,Mat(),Point(-1,-1),1);*/
         sprintf(title, "/work/shintaogas/code/shintao-recognize/train/trainTempImg%d.bmp", rand());
-        imshow(title,trainTempImg);
+        imshow(title,trainroi);
+		
         namedWindow( title, CV_WINDOW_AUTOSIZE );
         moveWindow( title, WIDTH * 1.5, 0 + roi.rows * ((i) * 3 ));
         imwrite(title, trainTempImg);
-        
         
         HOGDescriptor *hog= new HOGDescriptor (cvSize(28,28),cvSize(14,14),cvSize(7,7),cvSize(7,7),9);
         vector<float> descriptors;
@@ -459,7 +468,7 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf) {
 //    result[1] = 63; //0~9:辨識值 63:無法辨識
 //    result[2] = 63; //0~9:辨識值 63:無法辨識
 //    result[3] = 63; //0~9:辨識值 63:無法辨識
-//    result[4] = 63; //0~9:辨識值 63:無法辨識
+    //result[4] = 63; //0~9:辨識值 63:無法辨識
 //    result[5] = 63; //0~9:辨識值 63:無法辨識
     printf("result: %d, %d, %d, %d \n", result[1], result[2], result[3], result[4]);
 

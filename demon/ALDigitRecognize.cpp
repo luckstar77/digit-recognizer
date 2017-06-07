@@ -9,6 +9,7 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/opencv_modules.hpp>
+#include <opencv2/objdetect/objdetect.hpp>
 #include <opencv2/ml/ml.hpp>
 #include <stdlib.h>
 #include <stdio.h>
@@ -31,13 +32,28 @@ void IcvprCcaByTwoPass(const cv::Mat&, cv::Mat&);
 cv::Scalar IcvprGetRandomColor();
 void IcvprLabelColor(const cv::Mat& _labelImg, cv::Mat& _colorLabelImg);
 bool SortLtx(const ALRect lhs,const ALRect rhs);
+void drawHisImg(const Mat &src,Mat &dst);
 unsigned char SetNumericMax(unsigned char type);
 
 bool SortLtx(const ALRect lhs,const ALRect rhs)
 {
     return lhs._ltx < rhs._ltx ;
 }
-
+void drawHistImg(const Mat &src,Mat &dst){
+	int histSize = 256;
+	float histMaxValue =0;
+	for(int i =0;i<histSize;i++){
+		float tempValue = src.at<float>(i);
+		if(histMaxValue < tempValue){
+			histMaxValue = tempValue;
+		}
+	}
+	float scale = (0.9*256)/histMaxValue;
+	for(int i = 0;i<histSize;i++){
+		int intensity = static_cast<int>(src.at<float>(i)*scale);
+		line(dst,Point(i,255),Point(i,255-intensity),Scalar(0));
+	}
+}
 
 unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf, char *svmFilePath) {
     
@@ -51,6 +67,15 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf, cha
     
     cvtColor(src,src_gray,COLOR_BGR2GRAY);
     cvtColor(src,src_down,COLOR_BGR2GRAY);
+	int histSize = 256;
+	float rang[] = {0,255};
+	const float* histRange = {rang};
+	Mat histImg;
+	calcHist(&src_gray,1,0,Mat(),histImg,1,&histSize,&histRange);
+	Mat showHistImg(256,256,CV_8UC1,Scalar(255));
+	drawHistImg(histImg,showHistImg);
+	imshow("srcHistimg",showHistImg);
+
     while(true)
     {
         int piexl[3] = {0};
@@ -79,6 +104,11 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf, cha
     }
     //equalizeHist(src_gray,src_gray);
     
+	calcHist(&src_gray,1,0,Mat(),histImg,1,&histSize,&histRange);
+	showHistImg = Mat(256,256,CV_8UC1,Scalar(255));
+	drawHistImg(histImg,showHistImg);
+	imshow("srcHistimg2",showHistImg);
+
     dilate(src_gray,src_gray,Mat(),Point(-1,-1),1);
     //medianBlur(src_gray,src_gray,3);
     imshow("Grayimage",src_gray);
@@ -187,7 +217,7 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf, cha
         resize(roi,trainTempImg,Size(28,28));
         Mat trainRoi = Mat(32,32,CV_8U, Scalar(0));
 		int x = (trainRoi.rows /2)-( numeric[i]._width/2);
-		int y = (trainROi.cols /2)-( numeric[i]._height/2);
+		int y = (trainRoi.cols /2)-( numeric[i]._height/2);
 		Mat roi2 = trainRoi(Rect(x,y,roi.cols,roi.rows));
 		addWeighted(roi2,0,roi,1,0,roi2);
 

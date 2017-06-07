@@ -5,16 +5,10 @@
 //  Created by develop on 2017/6/6.
 //  Copyright © 2017年 develop. All rights reserved.
 //
-#include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/opencv_modules.hpp>
-#include <opencv2/objdetect/objdetect.hpp>
 #include <opencv2/ml/ml.hpp>
 #include <opencv2/objdetect.hpp>
-#include <stdlib.h>
-#include <stdio.h>
-#include <iostream>
 #include "ALRect.hpp"
 #include "ALDigitRecognize.hpp"
 
@@ -26,41 +20,21 @@ int WIDTH = 320, HEIGHT = 140;
 map<int, ALRect> component;
 vector<ALRect> numeric;
 CvSVM svm;
-//#define PRINTRESULT
 
 unsigned char *ALDigitRecognize(unsigned char, unsigned char *);
-void IcvprCcaByTwoPass(const cv::Mat&, cv::Mat&);
-cv::Scalar IcvprGetRandomColor();
-void IcvprLabelColor(const cv::Mat& _labelImg, cv::Mat& _colorLabelImg);
+void IcvprCcaByTwoPass(const Mat&, Mat&);
+Scalar IcvprGetRandomColor();
+void IcvprLabelColor(const Mat& _labelImg, Mat& _colorLabelImg);
 bool SortLtx(const ALRect lhs,const ALRect rhs);
 void drawHisImg(const Mat &src,Mat &dst);
 unsigned char SetNumericMax(unsigned char type);
-
-bool SortLtx(const ALRect lhs,const ALRect rhs)
-{
-    return lhs._ltx < rhs._ltx ;
-}
-void drawHistImg(const Mat &src,Mat &dst){
-	int histSize = 256;
-	float histMaxValue =0;
-	for(int i =0;i<histSize;i++){
-		float tempValue = src.at<float>(i);
-		if(histMaxValue < tempValue){
-			histMaxValue = tempValue;
-		}
-	}
-	float scale = (0.9*256)/histMaxValue;
-	for(int i = 0;i<histSize;i++){
-		int intensity = static_cast<int>(src.at<float>(i)*scale);
-		line(dst,Point(i,255),Point(i,255-intensity),Scalar(0));
-	}
-}
+void ShowWindow(const char *, Mat, int, int);
+void drawHistImg(const Mat &src, Mat &dst);
 
 unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf, char *svmFilePath) {
-    
+    static unsigned char result[6] = {0};
     svm.load(svmFilePath);
     Mat src_gray,dst,thres,src_down;
-    unsigned char result[6];
     int light=0;
     Mat src = Mat(HEIGHT, WIDTH, CV_8UC3, imageBuf);
     unsigned char numericMax = SetNumericMax(type);
@@ -75,7 +49,7 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf, cha
 	calcHist(&src_gray,1,0,Mat(),histImg,1,&histSize,&histRange);
 	Mat showHistImg(256,256,CV_8UC1,Scalar(255));
 	drawHistImg(histImg,showHistImg);
-	imshow("srcHistimg",showHistImg);
+    ShowWindow((const char *)"srcHistimg", showHistImg, 0, HEIGHT * 2);
 
     while(true)
     {
@@ -107,12 +81,12 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf, cha
     
 	calcHist(&src_gray,1,0,Mat(),histImg,1,&histSize,&histRange);
 	showHistImg = Mat(256,256,CV_8UC1,Scalar(255));
-	drawHistImg(histImg,showHistImg);
-	imshow("srcHistimg2",showHistImg);
+    drawHistImg(histImg,showHistImg);
+    ShowWindow((const char *)"srcHistimg2", showHistImg, 0, HEIGHT * 3);
 
     dilate(src_gray,src_gray,Mat(),Point(-1,-1),1);
     //medianBlur(src_gray,src_gray,3);
-    imshow("Grayimage",src_gray);
+    ShowWindow((const char *)"Grayimage", src_gray, 0, 0);
     
     int T =0;
     double Tmax;
@@ -169,16 +143,16 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf, cha
     threshold(src_gray,dst,T,255,THRESH_BINARY);
     threshold(src_gray,thres,T,1,THRESH_BINARY);
     threshold(src_down,src_down,T + light,255,THRESH_BINARY);
-    imshow("ALthreshold",dst);
+    ShowWindow((const char *)"ALthreshold", dst, WIDTH * 2, 0);
     
-    cv::Mat labelImg ;
+    Mat labelImg ;
     IcvprCcaByTwoPass(thres, labelImg) ;
     
     // show result
-    cv::Mat grayImg ;
+    Mat grayImg ;
     labelImg *= 10 ;
     labelImg.convertTo(grayImg, CV_8UC1) ;
-    cv::imshow("labelImg", grayImg) ;
+    ShowWindow((const char *)"labelImg", grayImg, WIDTH * 2, HEIGHT * 2);
     
     /*CvSVM svm;
      svm.load("D:\\OCR\\digital-recognize\\demon\\gas.xml");*/
@@ -201,9 +175,7 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf, cha
             sprintf(title, "component : %d", iter->first);
             cout << "component ltx, lty, width, height, count : " << iter->second._ltx << ", " << iter->second._lty << ", " << iter->second._width << ", " << iter->second._height << ", " << iter->second._count << endl;
             Mat roi = src_down( Rect(iter->second._ltx,iter->second._lty,iter->second._width,iter->second._height) );
-            imshow(title,roi);
-            namedWindow( title, CV_WINDOW_AUTOSIZE );
-            moveWindow( title, WIDTH * 4, 0 + roi.rows * ((counts++) * 3) );
+            ShowWindow(title, roi, WIDTH * 4, 0 + roi.rows * ((counts++) * 3));
         }
     }
     
@@ -223,9 +195,7 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf, cha
 		addWeighted(roi2,0,roi,1,0,roi2);
 
         sprintf(title, "/work/shintaogas/code/shintao-recognize/train/trainTempImg%d.bmp", rand());
-        imshow(title,trainRoi);
-        namedWindow( title, CV_WINDOW_AUTOSIZE );
-        moveWindow( title, WIDTH * 1.5, 0 + roi.rows * ((i) * 3 ));
+        ShowWindow(title, trainRoi, WIDTH * 1.5, 0 + roi.rows * ((i) * 3 ));
         imwrite(title, trainTempImg);
         
         
@@ -242,38 +212,25 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf, cha
         }
         int ret = svm.predict(SVMtrainMat);
         
-        if(i +1 < 7){
-            result[i + 1] = ret;}
+        if(i < numericMax) {
+            result[i + 1] = ret + 48;
+        }
         else{
             break;}
     }
     //
     
-    cv::Mat colorLabelImg ;
+    Mat colorLabelImg ;
     IcvprLabelColor(labelImg, colorLabelImg) ;
-    cv::imshow("colorImg", colorLabelImg) ;
+    ShowWindow((const char *)"colorImg", colorLabelImg, WIDTH * 2, 0 + HEIGHT * 4);
     
-    namedWindow( "ALthreshold", CV_WINDOW_AUTOSIZE );
-    namedWindow( "labelImg", CV_WINDOW_AUTOSIZE );
-    namedWindow( "colorImg", CV_WINDOW_AUTOSIZE );
-    
-    moveWindow( "ALthreshold", WIDTH * 2, 0 + HEIGHT * 0 );
-    moveWindow( "labelImg", WIDTH * 2, 0 + HEIGHT * 2 );
-    moveWindow( "colorImg", WIDTH * 2, 0 + HEIGHT * 4 );
-    
-    result[0] = 0;  //0:成功 非0:失敗
-    //    result[1] = 63; //0~9:辨識值 63:無法辨識
-    //    result[2] = 63; //0~9:辨識值 63:無法辨識
-    //    result[3] = 63; //0~9:辨識值 63:無法辨識
-    //    result[4] = 63; //0~9:辨識值 63:無法辨識
-    //    result[5] = 63; //0~9:辨識值 63:無法辨識
-    printf("result: %d, %d, %d, %d, %d \n", result[1], result[2], result[3], result[4], result[5]);
+    printf("result: %c, %c, %c, %c, %c \n", result[1], result[2], result[3], result[4], result[5]);
     
     
     return result;
 };
 
-void IcvprCcaByTwoPass(const cv::Mat& _binImg, cv::Mat& _lableImg)
+void IcvprCcaByTwoPass(const Mat& _binImg, Mat& _lableImg)
 {
     // connected component analysis (4-component)
     // use two-pass algorithm
@@ -401,15 +358,15 @@ void IcvprCcaByTwoPass(const cv::Mat& _binImg, cv::Mat& _lableImg)
     cout << "CCL : " << labelSet.size() << endl;
 }
 
-cv::Scalar IcvprGetRandomColor()
+Scalar IcvprGetRandomColor()
 {
     uchar r = 255 * (rand()/(1.0 + RAND_MAX));
     uchar g = 255 * (rand()/(1.0 + RAND_MAX));
     uchar b = 255 * (rand()/(1.0 + RAND_MAX));
-    return cv::Scalar(b,g,r) ;
+    return Scalar(b,g,r) ;
 }
 
-void IcvprLabelColor(const cv::Mat& _labelImg, cv::Mat& _colorLabelImg)
+void IcvprLabelColor(const Mat& _labelImg, Mat& _colorLabelImg)
 {
     if (_labelImg.empty() ||
         _labelImg.type() != CV_32SC1)
@@ -417,14 +374,14 @@ void IcvprLabelColor(const cv::Mat& _labelImg, cv::Mat& _colorLabelImg)
         return ;
     }
     
-    std::map<int, cv::Scalar> colors ;
+    std::map<int, Scalar> colors ;
     
     int rows = _labelImg.rows ;
     int cols = _labelImg.cols ;
     
     _colorLabelImg.release() ;
     _colorLabelImg.create(rows, cols, CV_8UC3) ;
-    _colorLabelImg = cv::Scalar::all(0) ;
+    _colorLabelImg = Scalar::all(0) ;
     
     for (int i = 0; i < rows; i++)
     {
@@ -439,7 +396,7 @@ void IcvprLabelColor(const cv::Mat& _labelImg, cv::Mat& _colorLabelImg)
                 {
                     colors[pixelValue] = IcvprGetRandomColor() ;
                 }
-                cv::Scalar color = colors[pixelValue] ;
+                Scalar color = colors[pixelValue] ;
                 *data_dst++   = color[0] ;
                 *data_dst++ = color[1] ;
                 *data_dst++ = color[2] ;
@@ -457,9 +414,38 @@ void IcvprLabelColor(const cv::Mat& _labelImg, cv::Mat& _colorLabelImg)
 unsigned char SetNumericMax(unsigned char type) {
     switch(type) {
         case 0:
-            return 4;
+        case '0':
+            return 5;
             break;
         default:
             return 4;
     }
+}
+
+bool SortLtx(const ALRect lhs,const ALRect rhs)
+{
+    return lhs._ltx < rhs._ltx ;
+}
+
+void drawHistImg(const Mat &src,Mat &dst) {
+    int histSize = 256;
+    float histMaxValue =0;
+    for(int i =0;i<histSize;i++){
+        float tempValue = src.at<float>(i);
+        if(histMaxValue < tempValue){
+            histMaxValue = tempValue;
+        }
+    }
+    float scale = (0.9*256)/histMaxValue;
+    for(int i = 0;i<histSize;i++){
+        int intensity = static_cast<int>(src.at<float>(i)*scale);
+        line(dst,Point(i,255),Point(i,255-intensity),Scalar(0));
+    }
+}
+
+void ShowWindow(const char *title, Mat src, int x, int y) {
+#ifdef SHOWWINDOW
+    imshow(title,src);
+    moveWindow( title, x, y );
+#endif
 }

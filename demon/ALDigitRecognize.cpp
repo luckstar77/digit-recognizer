@@ -21,14 +21,13 @@ map<int, ALRect> component;
 vector<ALRect> numeric;
 CvSVM svm;
 
-unsigned char *ALDigitRecognize(unsigned char, unsigned char *);
-void IcvprCcaByTwoPass(const Mat&, Mat&);
+void IcvprCcaByTwoPass(const Mat& _binImg, Mat& _lableImg);
 Scalar IcvprGetRandomColor();
 void IcvprLabelColor(const Mat& _labelImg, Mat& _colorLabelImg);
 bool SortLtx(const ALRect lhs,const ALRect rhs);
 void drawHisImg(const Mat &src,Mat &dst);
 unsigned char SetNumericMax(unsigned char type);
-void ShowWindow(const char *, Mat, int, int);
+void ShowWindow(const char *title, Mat src, int x, int y);
 void drawHistImg(const Mat &src, Mat &dst);
 
 unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf, char *svmFilePath) {
@@ -38,6 +37,7 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf, cha
     int light=0;
     Mat src = Mat(HEIGHT, WIDTH, CV_8UC3, imageBuf);
     unsigned char numericMax = SetNumericMax(type);
+    ShowWindow((const char *)"src", src, WIDTH * 1.5, HEIGHT * 3);
     
     
     cvtColor(src,src_gray,COLOR_BGR2GRAY);
@@ -49,7 +49,7 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf, cha
 	calcHist(&src_gray,1,0,Mat(),histImg,1,&histSize,&histRange);
 	Mat showHistImg(256,256,CV_8UC1,Scalar(255));
 	drawHistImg(histImg,showHistImg);
-    ShowWindow((const char *)"srcHistimg", showHistImg, 0, HEIGHT * 2);
+    ShowWindow((const char *)"srcHistimg", showHistImg, 0, HEIGHT * 1.5);
 
     while(true)
     {
@@ -194,7 +194,7 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf, cha
 		Mat roi2 = trainRoi(Rect(x,y,roi.cols,roi.rows));
 		addWeighted(roi2,0,roi,1,0,roi2);
 
-        sprintf(title, "/work/shintaogas/code/shintao-recognize/train/trainTempImg%d.bmp", rand());
+        sprintf(title, "/work/shintaogas/code/shintao-recognize/train/trainTempImg%d_.bmp", rand());
         ShowWindow(title, trainRoi, WIDTH * 1.5, 0 + roi.rows * ((i) * 3 ));
         imwrite(title, trainTempImg);
         

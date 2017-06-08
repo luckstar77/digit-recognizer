@@ -14,7 +14,7 @@
 class ALRect {
 public:
     ALRect();
-    ALRect(int, int, int, int, int);
+    ALRect(int ltx, int lty, int width, int height, int count);
     
     int _ltx;
     int _lty;
@@ -26,11 +26,11 @@ public:
     int _height;
     int _count;
     
-    void SetLtx(int);
-    void SetLty(int);
-    void SetRdx(int);
-    void SetRdy(int);
-    void AddCount(int);
+    void SetLtx(int ltx);
+    void SetLty(int lty);
+    void SetRdx(int rdx);
+    void SetRdy(int rdy);
+    void AddCount(int increment);
 private:
     
 };

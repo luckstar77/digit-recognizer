@@ -1,5 +1,4 @@
 #include <opencv2/highgui/highgui.hpp>
-#include <stdio.h>
 #include "ALDigitRecognize.hpp"
 
 using namespace cv;
@@ -8,7 +7,7 @@ using namespace std;
 int main(int argc,char** argv)
 {
 	Mat image = imread(argv[1],CV_LOAD_IMAGE_COLOR);
-    char *result;
+    unsigned char *result;
 	if(!image.data)
 	{
 		return -1;

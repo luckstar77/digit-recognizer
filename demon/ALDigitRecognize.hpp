@@ -9,6 +9,6 @@
 #ifndef ALDigitRecognize_hpp
 #define ALDigitRecognize_hpp
 
-char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf, char *svmFilePath);
+unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf, char *svmFilePath);
 
 #endif /* ALDigitRecognize_hpp */

@@ -31,7 +31,7 @@ void ShowWindow(const char *title, Mat src, int x, int y);
 void drawHistImg(const Mat &src, Mat &dst);
 
 unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf, char *svmFilePath) {
-    static unsigned char result[6] = {0};
+    static unsigned char result[7] = {0};
     svm.load(svmFilePath);
     Mat src_gray,dst,thres,src_down;
     int light=0;
@@ -224,7 +224,7 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf, cha
     IcvprLabelColor(labelImg, colorLabelImg) ;
     ShowWindow((const char *)"colorImg", colorLabelImg, WIDTH * 2, 0 + HEIGHT * 4);
     
-    printf("result: %c, %c, %c, %c, %c \n", result[1], result[2], result[3], result[4], result[5]);
+    printf("result: %c, %c, %c, %c, %c, %d \n", result[1], result[2], result[3], result[4], result[5], result[6]);
     
     
     return result;

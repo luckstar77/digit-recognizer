@@ -8,7 +8,7 @@ using namespace std;
 int main(int argc,char** argv)
 {
 	Mat image = imread(argv[1],CV_LOAD_IMAGE_COLOR);
-    unsigned char *result;
+    char *result;
 	if(!image.data)
 	{
 		return -1;

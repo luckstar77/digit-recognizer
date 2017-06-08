@@ -30,8 +30,8 @@ unsigned char SetNumericMax(unsigned char type);
 void ShowWindow(const char *title, Mat src, int x, int y);
 void drawHistImg(const Mat &src, Mat &dst);
 
-unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf, char *svmFilePath) {
-    static unsigned char result[7] = {0};
+char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf, char *svmFilePath) {
+    static char result[7] = {0};
     svm.load(svmFilePath);
     Mat src_gray,dst,thres,src_down;
     int light=0;

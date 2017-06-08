@@ -1,5 +1,4 @@
 #include <opencv2/highgui/highgui.hpp>
-#include <stdio.h>
 #include "ALDigitRecognize.hpp"
 
 using namespace cv;

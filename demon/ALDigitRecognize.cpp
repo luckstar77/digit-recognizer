@@ -11,7 +11,6 @@
 #include <opencv2/opencv_modules.hpp>
 #include <opencv2/objdetect/objdetect.hpp>
 #include <opencv2/ml/ml.hpp>
-#include <opencv2/objdetect.hpp>
 #include <stdlib.h>
 #include <stdio.h>
 #include <iostream>
@@ -77,7 +76,7 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf, cha
 	drawHistImg(histImg,showHistImg);
 	imshow("srcHistimg",showHistImg);
 
-    while(true)
+    /*while(true)
     {
         int piexl[3] = {0};
         for(int i =0;i<src_gray.rows;i++)
@@ -102,15 +101,10 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf, cha
         }
         else
             break;
-    }
+    }*/
     //equalizeHist(src_gray,src_gray);
     
-	calcHist(&src_gray,1,0,Mat(),histImg,1,&histSize,&histRange);
-	showHistImg = Mat(256,256,CV_8UC1,Scalar(255));
-	drawHistImg(histImg,showHistImg);
-	imshow("srcHistimg2",showHistImg);
-
-    dilate(src_gray,src_gray,Mat(),Point(-1,-1),1);
+    //dilate(src_gray,src_gray,Mat(),Point(-1,-1),1);
     //medianBlur(src_gray,src_gray,3);
     imshow("Grayimage",src_gray);
     
@@ -121,7 +115,7 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf, cha
     T = ( Tmax + Tmin ) / 2;
     printf("Brightness MIN, MAX: %f, %f\n", Tmin, Tmax);
     
-    while(true)
+   /* while(true)
     {
         
         int Tosum =0,Tusum =0;
@@ -163,9 +157,13 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf, cha
             T = (Tosum+Tusum) /2;
         else
             break;
-    }
+    }*/
     
-    
+    Mat test ;
+	adaptiveThreshold(src_gray, test, 255, ADAPTIVE_THRESH_MEAN_C, THRESH_BINARY,129, 0);
+	//medianBlur(test,test,3);
+	dilate(test,test,Mat(),Point(-1,-1),1);
+	imshow("adaptiv",test);
     threshold(src_gray,dst,T,255,THRESH_BINARY);
     threshold(src_gray,thres,T,1,THRESH_BINARY);
     threshold(src_down,src_down,T + light,255,THRESH_BINARY);

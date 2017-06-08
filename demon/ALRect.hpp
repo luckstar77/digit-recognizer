@@ -9,8 +9,6 @@
 #ifndef ALRect_hpp
 #define ALRect_hpp
 
-#include <stdio.h>
-
 class ALRect {
 public:
     ALRect();

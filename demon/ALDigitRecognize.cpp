@@ -57,31 +57,31 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf, cha
     ShowWindow((const char *)"srcHistimg", showHistImg, 0, HEIGHT * 1.5);
     
     /*while(true)
-     {
-     int piexl[3] = {0};
-     for(int i =0;i<src_gray.rows;i++)
-     {
-     for(int j = 0;j< src_gray.cols;j++)
-     {
-     if(src_gray.at<uchar>(i,j) < 120 ){
-     piexl[0] ++;}
-     else if(src_gray.at<uchar>(i,j) <= 230){
-     piexl[1] ++;}
-     else {
-     piexl[2] ++;}
-     }
-     }
-     if(piexl[0] > (piexl[1]+(src_gray.rows *  src_gray.cols) / 6) && piexl[0] > piexl[2]){
-     src_gray.convertTo(src_gray,-1,1,15);
-     light -=15;
-     }
-     else if(piexl[2] > (piexl[1]+(src_gray.rows *  src_gray.cols) / 6) && piexl[2] > piexl[0]){
-     src_gray.convertTo(src_gray,-1,1,-15);
-     light +=15;
-     }
-     else
-     break;
-     }*/
+    {
+        int piexl[3] = {0};
+        for(int i =0;i<src_gray.rows;i++)
+        {
+            for(int j = 0;j< src_gray.cols;j++)
+            {
+                if(src_gray.at<uchar>(i,j) < 120 ){
+                    piexl[0] ++;}
+                else if(src_gray.at<uchar>(i,j) <= 230){
+                    piexl[1] ++;}
+                else {
+                    piexl[2] ++;}
+            }
+        }
+        if(piexl[0] > (piexl[1]+(src_gray.rows *  src_gray.cols) / 6) && piexl[0] > piexl[2]){
+            src_gray.convertTo(src_gray,-1,1,15);
+            light -=15;
+        }
+        else if(piexl[2] > (piexl[1]+(src_gray.rows *  src_gray.cols) / 6) && piexl[2] > piexl[0]){
+            src_gray.convertTo(src_gray,-1,1,-15);
+            light +=15;
+        }
+        else
+            break;
+    }*/
     //equalizeHist(src_gray,src_gray);
     
     //dilate(src_gray,src_gray,Mat(),Point(-1,-1),1);
@@ -101,49 +101,49 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf, cha
     T = ( Tmax + Tmin ) / 2;
     printf("Brightness MIN, MAX: %f, %f\n", Tmin, Tmax);
     
-    /* while(true)
-     {
-     
-     int Tosum =0,Tusum =0;
-     int on = 0,un =0;
-     for(int i = 0;i<src_gray.rows;i++)
-     {
-     for(int j = 0 ;j <src_gray.cols; j++)
-     {
-     if(src_gray.at<uchar>(i,j) >= T )
-     {
-     Tosum += src_gray.at<uchar>(i,j);
-     on ++;
-     }
-     else
-     {
-     Tusum += src_gray.at<uchar>(i,j);
-     un ++;
-     }
-     }
-     }
-     if(on != 0)
-     {
-     Tosum /=on;
-     }
-     else
-     {
-     Tosum = 0;
-     }
-     if(un != 0)
-     {
-     Tusum /=un;
-     }
-     else
-     {
-     Tusum = 0;
-     }
-     
-     if((Tosum+Tusum) /2  != T)
-     T = (Tosum+Tusum) /2;
-     else
-     break;
-     }*/
+   /* while(true)
+    {
+        
+        int Tosum =0,Tusum =0;
+        int on = 0,un =0;
+        for(int i = 0;i<src_gray.rows;i++)
+        {
+            for(int j = 0 ;j <src_gray.cols; j++)
+            {
+                if(src_gray.at<uchar>(i,j) >= T )
+                {
+                    Tosum += src_gray.at<uchar>(i,j);
+                    on ++;
+                }
+                else
+                {
+                    Tusum += src_gray.at<uchar>(i,j);
+                    un ++;
+                }
+            }
+        }
+        if(on != 0)
+        {
+            Tosum /=on;
+        }
+        else
+        {
+            Tosum = 0;
+        }
+        if(un != 0)
+        {
+            Tusum /=un;
+        }
+        else
+        {
+            Tusum = 0;
+        }
+        
+        if((Tosum+Tusum) /2  != T)
+            T = (Tosum+Tusum) /2;
+        else
+            break;
+    }*/
     
     Mat test ;
     adaptiveThreshold(src_gray, test, 255, ADAPTIVE_THRESH_MEAN_C, THRESH_BINARY,129, 0);
@@ -468,8 +468,7 @@ void drawHistImg(const Mat &src,Mat &dst) {
 
 void ShowWindow(const char *title, Mat src, int x, int y) {
 #ifdef SHOWWINDOW
-
-#endif    
-	imshow(title,src);
+    imshow(title,src);
     moveWindow( title, x, y );
+#endif
 }

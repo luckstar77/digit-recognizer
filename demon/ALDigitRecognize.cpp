@@ -44,7 +44,6 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf, cha
     short numericMax = SetNumericMax(type);
     ShowWindow((const char *)"src", src, WIDTH * 1.5, HEIGHT * 3);
     
-    
     cvtColor(src,src_gray,COLOR_BGR2GRAY);
     cvtColor(src,src_down,COLOR_BGR2GRAY);
     int histSize = 256;
@@ -472,3 +471,4 @@ void ShowWindow(const char *title, Mat src, int x, int y) {
     moveWindow( title, x, y );
 #endif
 }
+

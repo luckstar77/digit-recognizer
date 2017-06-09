@@ -26,17 +26,18 @@ Scalar IcvprGetRandomColor();
 void IcvprLabelColor(const Mat& _labelImg, Mat& _colorLabelImg);
 bool SortLtx(const ALRect lhs,const ALRect rhs);
 void drawHisImg(const Mat &src,Mat &dst);
-unsigned char SetNumericMax(unsigned char type);
+short SetNumericMax(unsigned char type);
 void ShowWindow(const char *title, Mat src, int x, int y);
 void drawHistImg(const Mat &src, Mat &dst);
 
 unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf, char *svmFilePath) {
     static unsigned char result[7] = {0};
+    result[0] = 1;
     svm.load(svmFilePath);
     Mat src_gray,dst,thres,src_down;
     int light=0;
     Mat src = Mat(HEIGHT, WIDTH, CV_8UC3, imageBuf);
-    unsigned char numericMax = SetNumericMax(type);
+    short numericMax = SetNumericMax(type);
     ShowWindow((const char *)"src", src, WIDTH * 1.5, HEIGHT * 3);
     
     
@@ -168,7 +169,7 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf, cha
         int height = iter->second._height;
         int count = iter->second._count;
         int cy = HEIGHT / 2;
-        bool isShow =  y + height >= cy && count >= 100 && count <= 660 && height >=17 && height < 35 ? true : false;
+        bool isShow =  y + height >= cy && count >= 100 && count <= 760 && height >=17 && height < 45 ? true : false;
         char title[1000] ;
         if(isShow) {
             numeric.push_back(iter->second);
@@ -182,13 +183,20 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf, cha
     //
     sort(numeric.begin(),numeric.end(),SortLtx);
     
-    for(int i=0; i<numericMax; i++) {
+    for(int i=0; i<numeric.size(); i++) {
+        if (i >= numericMax) {
+            result[0] = 7;
+            break;
+        } else if (i + 1 == numericMax) {
+            result[0] = 0;
+        }
+        
         char title[1000] ;
         cout << "numeric ltx, lty, width, height, count : " << numeric[i]._ltx << ", " << numeric[i]._lty << ", " << numeric[i]._width << ", " << numeric[i]._height << ", " << numeric[i]._count << endl;
         sprintf(title, "numeric : %d", i);
         Mat roi = src_down( Rect(numeric[i]._ltx,numeric[i]._lty,numeric[i]._width,numeric[i]._height) );
-        resize(roi,trainTempImg,Size(28,28));
-        Mat trainRoi = Mat(32,32,CV_8U, Scalar(0));
+        resize(roi,trainTempImg,Size(48,48));
+        Mat trainRoi = Mat(48,48,CV_8U, Scalar(0));
 		int x = (trainRoi.rows /2)-( numeric[i]._width/2);
 		int y = (trainRoi.cols /2)-( numeric[i]._height/2);
 		Mat roi2 = trainRoi(Rect(x,y,roi.cols,roi.rows));
@@ -196,10 +204,10 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf, cha
 
         sprintf(title, "/work/shintaogas/code/shintao-recognize/train/trainTempImg%d_.bmp", rand());
         ShowWindow(title, trainRoi, WIDTH * 1.5, 0 + roi.rows * ((i) * 3 ));
-        imwrite(title, trainTempImg);
+        imwrite(title, trainRoi);
         
         
-        HOGDescriptor *hog= new HOGDescriptor (cvSize(28,28),cvSize(14,14),cvSize(7,7),cvSize(7,7),9);
+        HOGDescriptor *hog= new HOGDescriptor (cvSize(48,48),cvSize(24,24),cvSize(12,12),cvSize(6,6),9);
         vector<float> descriptors;
         hog->compute(trainTempImg,descriptors,Size(1,1),Size(0,0));
         printf("Hog dims: %d \n",descriptors.size());
@@ -411,10 +419,13 @@ void IcvprLabelColor(const Mat& _labelImg, Mat& _colorLabelImg)
     }
 }
 
-unsigned char SetNumericMax(unsigned char type) {
+short SetNumericMax(unsigned char type) {
     switch(type) {
         case 0:
         case '0':
+            return 4;
+            break;
+        case '1':
             return 5;
             break;
         default:

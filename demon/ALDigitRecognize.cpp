@@ -9,6 +9,7 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/ml/ml.hpp>
 #include <opencv2/objdetect.hpp>
+#include <unistd.h>
 #include "ALRect.hpp"
 #include "ALDigitRecognize.hpp"
 
@@ -31,6 +32,9 @@ void ShowWindow(const char *title, Mat src, int x, int y);
 void drawHistImg(const Mat &src, Mat &dst);
 
 unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf, char *svmFilePath) {
+#ifdef SHOWWINDOW
+    srand(time(NULL));
+#endif
     static unsigned char result[7] = {0};
     result[0] = 1;
     svm.load(svmFilePath);
@@ -201,11 +205,14 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf, cha
 		int y = (trainRoi.cols /2)-( numeric[i]._height/2);
 		Mat roi2 = trainRoi(Rect(x,y,roi.cols,roi.rows));
 		addWeighted(roi2,0,roi,1,0,roi2);
-
-        sprintf(title, "/work/shintaogas/code/shintao-recognize/train/trainTempImg%d_.bmp", rand());
-        ShowWindow(title, trainRoi, WIDTH * 1.5, 0 + roi.rows * ((i) * 3 ));
-        imwrite(title, trainRoi);
         
+#ifdef SHOWWINDOW
+        getcwd(title, 1000);
+        cout << title << "\/train\/tmp\/" << endl;
+        sprintf(title, "%s\/train\/tmp\/%d.bmp", title, rand());
+        ShowWindow(title, trainRoi, WIDTH * 1.5, 0 + trainRoi.rows * ((i) * 2 ));
+        imwrite(title, trainRoi);
+#endif
         
         HOGDescriptor *hog= new HOGDescriptor (cvSize(48,48),cvSize(24,24),cvSize(12,12),cvSize(6,6),9);
         vector<float> descriptors;

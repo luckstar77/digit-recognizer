@@ -47,48 +47,49 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf, cha
     
     cvtColor(src,src_gray,COLOR_BGR2GRAY);
     cvtColor(src,src_down,COLOR_BGR2GRAY);
-	int histSize = 256;
-	float rang[] = {0,255};
-	const float* histRange = {rang};
-	Mat histImg;
-	calcHist(&src_gray,1,0,Mat(),histImg,1,&histSize,&histRange);
-	Mat showHistImg(256,256,CV_8UC1,Scalar(255));
-	drawHistImg(histImg,showHistImg);
+    int histSize = 256;
+    float rang[] = {0,255};
+    const float* histRange = {rang};
+    Mat histImg;
+    calcHist(&src_gray,1,0,Mat(),histImg,1,&histSize,&histRange);
+    Mat showHistImg(256,256,CV_8UC1,Scalar(255));
+    drawHistImg(histImg,showHistImg);
     ShowWindow((const char *)"srcHistimg", showHistImg, 0, HEIGHT * 1.5);
-
-    while(true)
-    {
-        int piexl[3] = {0};
-        for(int i =0;i<src_gray.rows;i++)
-        {
-            for(int j = 0;j< src_gray.cols;j++)
-            {
-                if(src_gray.at<uchar>(i,j) < 120 ){
-                    piexl[0] ++;}
-                else if(src_gray.at<uchar>(i,j) <= 230){
-                    piexl[1] ++;}
-                else {
-                    piexl[2] ++;}
-            }
-        }
-        if(piexl[0] > (piexl[1]+(src_gray.rows *  src_gray.cols) / 6) && piexl[0] > piexl[2]){
-            src_gray.convertTo(src_gray,-1,1,15);
-            light -=15;
-        }
-        else if(piexl[2] > (piexl[1]+(src_gray.rows *  src_gray.cols) / 6) && piexl[2] > piexl[0]){
-            src_gray.convertTo(src_gray,-1,1,-15);
-            light +=15;
-        }
-        else
-            break;
-    }
+    
+    /*while(true)
+     {
+     int piexl[3] = {0};
+     for(int i =0;i<src_gray.rows;i++)
+     {
+     for(int j = 0;j< src_gray.cols;j++)
+     {
+     if(src_gray.at<uchar>(i,j) < 120 ){
+     piexl[0] ++;}
+     else if(src_gray.at<uchar>(i,j) <= 230){
+     piexl[1] ++;}
+     else {
+     piexl[2] ++;}
+     }
+     }
+     if(piexl[0] > (piexl[1]+(src_gray.rows *  src_gray.cols) / 6) && piexl[0] > piexl[2]){
+     src_gray.convertTo(src_gray,-1,1,15);
+     light -=15;
+     }
+     else if(piexl[2] > (piexl[1]+(src_gray.rows *  src_gray.cols) / 6) && piexl[2] > piexl[0]){
+     src_gray.convertTo(src_gray,-1,1,-15);
+     light +=15;
+     }
+     else
+     break;
+     }*/
     //equalizeHist(src_gray,src_gray);
     
-	calcHist(&src_gray,1,0,Mat(),histImg,1,&histSize,&histRange);
-	showHistImg = Mat(256,256,CV_8UC1,Scalar(255));
+    //dilate(src_gray,src_gray,Mat(),Point(-1,-1),1);
+    calcHist(&src_gray,1,0,Mat(),histImg,1,&histSize,&histRange);
+    showHistImg = Mat(256,256,CV_8UC1,Scalar(255));
     drawHistImg(histImg,showHistImg);
     ShowWindow((const char *)"srcHistimg2", showHistImg, 0, HEIGHT * 3);
-
+    
     dilate(src_gray,src_gray,Mat(),Point(-1,-1),1);
     //medianBlur(src_gray,src_gray,3);
     ShowWindow((const char *)"Grayimage", src_gray, 0, 0);
@@ -100,51 +101,55 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf, cha
     T = ( Tmax + Tmin ) / 2;
     printf("Brightness MIN, MAX: %f, %f\n", Tmin, Tmax);
     
-    while(true)
-    {
-        
-        int Tosum =0,Tusum =0;
-        int on = 0,un =0;
-        for(int i = 0;i<src_gray.rows;i++)
-        {
-            for(int j = 0 ;j <src_gray.cols; j++)
-            {
-                if(src_gray.at<uchar>(i,j) >= T )
-                {
-                    Tosum += src_gray.at<uchar>(i,j);
-                    on ++;
-                }
-                else
-                {
-                    Tusum += src_gray.at<uchar>(i,j);
-                    un ++;
-                }
-            }
-        }
-        if(on != 0)
-        {
-            Tosum /=on;
-        }
-        else
-        {
-            Tosum = 0;
-        }
-        if(un != 0)
-        {
-            Tusum /=un;
-        }
-        else
-        {
-            Tusum = 0;
-        }
-        
-        if((Tosum+Tusum) /2  != T)
-            T = (Tosum+Tusum) /2;
-        else
-            break;
-    }
+    /* while(true)
+     {
+     
+     int Tosum =0,Tusum =0;
+     int on = 0,un =0;
+     for(int i = 0;i<src_gray.rows;i++)
+     {
+     for(int j = 0 ;j <src_gray.cols; j++)
+     {
+     if(src_gray.at<uchar>(i,j) >= T )
+     {
+     Tosum += src_gray.at<uchar>(i,j);
+     on ++;
+     }
+     else
+     {
+     Tusum += src_gray.at<uchar>(i,j);
+     un ++;
+     }
+     }
+     }
+     if(on != 0)
+     {
+     Tosum /=on;
+     }
+     else
+     {
+     Tosum = 0;
+     }
+     if(un != 0)
+     {
+     Tusum /=un;
+     }
+     else
+     {
+     Tusum = 0;
+     }
+     
+     if((Tosum+Tusum) /2  != T)
+     T = (Tosum+Tusum) /2;
+     else
+     break;
+     }*/
     
-    
+    Mat test ;
+    adaptiveThreshold(src_gray, test, 255, ADAPTIVE_THRESH_MEAN_C, THRESH_BINARY,129, 0);
+    //medianBlur(test,test,3);
+    dilate(test,test,Mat(),Point(-1,-1),1);
+    //imshow("adaptiv",test);
     threshold(src_gray,dst,T,255,THRESH_BINARY);
     threshold(src_gray,thres,T,1,THRESH_BINARY);
     threshold(src_down,src_down,T + light,255,THRESH_BINARY);
@@ -201,10 +206,10 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf, cha
         Mat roi = src_down( Rect(numeric[i]._ltx,numeric[i]._lty,numeric[i]._width,numeric[i]._height) );
         resize(roi,trainTempImg,Size(48,48));
         Mat trainRoi = Mat(48,48,CV_8U, Scalar(0));
-		int x = (trainRoi.rows /2)-( numeric[i]._width/2);
-		int y = (trainRoi.cols /2)-( numeric[i]._height/2);
-		Mat roi2 = trainRoi(Rect(x,y,roi.cols,roi.rows));
-		addWeighted(roi2,0,roi,1,0,roi2);
+        int x = (trainRoi.rows /2)-( numeric[i]._width/2);
+        int y = (trainRoi.cols /2)-( numeric[i]._height/2);
+        Mat roi2 = trainRoi(Rect(x,y,roi.cols,roi.rows));
+        addWeighted(roi2,0,roi,1,0,roi2);
         
 #ifdef SHOWWINDOW
         getcwd(title, 1000);

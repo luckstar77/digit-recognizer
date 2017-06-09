@@ -468,7 +468,8 @@ void drawHistImg(const Mat &src,Mat &dst) {
 
 void ShowWindow(const char *title, Mat src, int x, int y) {
 #ifdef SHOWWINDOW
-    imshow(title,src);
+
+#endif    
+	imshow(title,src);
     moveWindow( title, x, y );
-#endif
 }

@@ -36,6 +36,7 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf, cha
     srand(time(NULL));
 #endif
     static unsigned char result[7] = {0};
+    numeric.clear();
     result[0] = 1;
     svm.load(svmFilePath);
     Mat src_gray,dst,thres,src_down;

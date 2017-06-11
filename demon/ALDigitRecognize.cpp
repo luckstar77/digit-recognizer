@@ -16,7 +16,6 @@
 using namespace cv;
 using namespace std;
 
-Mat erosion_dst, dilation_dst;
 int WIDTH = 320, HEIGHT = 140;
 map<int, ALRect> component;
 vector<ALRect> numeric;
@@ -36,6 +35,7 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf, cha
     srand(time(NULL));
 #endif
     static unsigned char result[7] = {0};
+    component.clear();
     numeric.clear();
     result[0] = 1;
     svm.load(svmFilePath);

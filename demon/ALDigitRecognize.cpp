@@ -178,7 +178,7 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf, cha
         int height = iter->second._height;
         int count = iter->second._count;
         int cy = HEIGHT / 2;
-        bool isShow =  y + height >= cy && count >= 70 && count <= 760 && height >=17 && height < 45 ? true : false;
+        bool isShow =  y <= cy && y + height >= cy && count >= 70 && count <= 760 && height >=17 && height < 45 ? true : false;
         char title[1000] ;
         if(isShow) {
             numeric.push_back(iter->second);
@@ -214,7 +214,7 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf, cha
 #ifdef SHOWWINDOW
         getcwd(title, 1000);
         cout << title << "/train/tmp/" << endl;
-        sprintf(title, "%s/train/tmp/%d_%d.bmp", title, 4, rand());
+        sprintf(title, "%s/train/tmp/%d_%d.bmp", title, 1, rand());
         ShowWindow(title, trainRoi, WIDTH * 1.5, 0 + trainRoi.rows * ((i) * 2 ));
         imwrite(title, trainRoi);
 #endif

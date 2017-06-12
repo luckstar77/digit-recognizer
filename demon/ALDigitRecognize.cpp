@@ -56,7 +56,7 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf, cha
     drawHistImg(histImg,showHistImg);
     ShowWindow((const char *)"srcHistimg", showHistImg, 0, HEIGHT * 1.5);
     
-    /*while(true)
+    while(true)
     {
         int piexl[3] = {0};
         for(int i =0;i<src_gray.rows;i++)
@@ -81,7 +81,7 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf, cha
         }
         else
             break;
-    }*/
+    }
     //equalizeHist(src_gray,src_gray);
     
     //dilate(src_gray,src_gray,Mat(),Point(-1,-1),1);
@@ -101,7 +101,7 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf, cha
     T = ( Tmax + Tmin ) / 2;
     printf("Brightness MIN, MAX: %f, %f\n", Tmin, Tmax);
     
-   /* while(true)
+    while(true)
     {
         
         int Tosum =0,Tusum =0;
@@ -143,7 +143,7 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf, cha
             T = (Tosum+Tusum) /2;
         else
             break;
-    }*/
+    }
     
     Mat test ;
     adaptiveThreshold(src_gray, test, 255, ADAPTIVE_THRESH_MEAN_C, THRESH_BINARY,129, 0);
@@ -178,7 +178,7 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf, cha
         int height = iter->second._height;
         int count = iter->second._count;
         int cy = HEIGHT / 2;
-        bool isShow =  y + height >= cy && count >= 100 && count <= 760 && height >=17 && height < 45 ? true : false;
+        bool isShow =  y + height >= cy && count >= 80 && count <= 760 && height >=17 && height < 45 ? true : false;
         char title[1000] ;
         if(isShow) {
             numeric.push_back(iter->second);
@@ -214,7 +214,7 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf, cha
 #ifdef SHOWWINDOW
         getcwd(title, 1000);
         cout << title << "/train/tmp/" << endl;
-        sprintf(title, "%s/train/tmp/%d.bmp", title, rand());
+        sprintf(title, "%s/train/tmp/%d_%d.bmp", title, 4, rand());
         ShowWindow(title, trainRoi, WIDTH * 1.5, 0 + trainRoi.rows * ((i) * 2 ));
         imwrite(title, trainRoi);
 #endif
@@ -433,12 +433,50 @@ void IcvprLabelColor(const Mat& _labelImg, Mat& _colorLabelImg)
 
 short SetNumericMax(unsigned char type) {
     switch(type) {
-        case 0:
-        case '0':
+        case 1:
             return 4;
             break;
-        case '1':
+        case 4:
+            return 4;
+            break;
+        case 5:
+            return 4;
+            break;
+        case 6:
+            return 4;
+            break;
+        case 7:
+            return 4;
+            break;
+        case 8:
             return 5;
+            break;
+        case 9:
+            return 4;
+            break;
+        case 10:
+            return 5;
+            break;
+        case 11:
+            return 4;
+            break;
+        case 12:
+            return 4;
+            break;
+        case 13:
+            return 4;
+            break;
+        case 14:
+            return 4;
+            break;
+        case 15:
+            return 4;
+            break;
+        case 16:
+            return 4;
+            break;
+        case 17:
+            return 4;
             break;
         default:
             return 4;

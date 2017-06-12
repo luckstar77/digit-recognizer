@@ -9,7 +9,7 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/ml/ml.hpp>
 #include <opencv2/objdetect/objdetect.hpp>
-//#include <unistd.h>
+#include <unistd.h>
 #include "ALRect.hpp"
 #include "ALDigitRecognize.hpp"
 
@@ -221,7 +221,7 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf, cha
         
         HOGDescriptor *hog= new HOGDescriptor (cvSize(48,48),cvSize(24,24),cvSize(12,12),cvSize(6,6),9);
         vector<float> descriptors;
-        hog->compute(trainTempImg,descriptors,Size(1,1),Size(0,0));
+        hog->compute(trainRoi,descriptors,Size(1,1),Size(0,0));
         printf("Hog dims: %d \n",descriptors.size());
         CvMat* SVMtrainMat = cvCreateMat(1,descriptors.size(),CV_32FC1);
         int n =0;

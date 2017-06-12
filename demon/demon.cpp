@@ -16,5 +16,7 @@ int main(int argc,char** argv)
     result = ALDigitRecognize(*argv[3], image.data, argv[2]);
     
     printf("callback : %d, %c, %c, %c, %c, %c", result[0], result[1], result[2], result[3], result[4], result[5]);
-    waitKey(0);
+    
+	system("pause");
+	waitKey(0);
 }

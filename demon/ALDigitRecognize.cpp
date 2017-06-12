@@ -178,7 +178,7 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf, cha
         int height = iter->second._height;
         int count = iter->second._count;
         int cy = HEIGHT / 2;
-        bool isShow =  y + height >= cy && count >= 80 && count <= 760 && height >=17 && height < 45 ? true : false;
+        bool isShow =  y + height >= cy && count >= 70 && count <= 760 && height >=17 && height < 45 ? true : false;
         char title[1000] ;
         if(isShow) {
             numeric.push_back(iter->second);

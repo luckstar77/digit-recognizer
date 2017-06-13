@@ -10,6 +10,7 @@
 #include <opencv2/ml/ml.hpp>
 #include <opencv2/objdetect/objdetect.hpp>
 #include <unistd.h>
+#include <time.h> 
 #include "ALRect.hpp"
 #include "ALDigitRecognize.hpp"
 
@@ -31,8 +32,7 @@ void ShowWindow(const char *title, Mat src, int x, int y);
 void drawHistImg(const Mat &src, Mat &dst);
 
 unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf, char *svmFilePath) {
-#ifdef SHOWWINDOW 
-
+#ifdef SHOWWINDOW
     srand(time(NULL));
 #endif
     static unsigned char result[7] = {0};
@@ -206,13 +206,12 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf, cha
         addWeighted(roi2,0,roi,1,0,roi2);
         
 #ifdef SHOWWINDOW
-#endif
         //getcwd(title, 1000);
         cout << title << "/train/tmp/" << endl;
         sprintf(title, "%s/train/tmp/%d_%d.bmp", title, 1, rand());
         ShowWindow(title, trainRoi, WIDTH * 1.5, 0 + trainRoi.rows * ((i) * 2 ));
         imwrite(title, trainRoi);
-
+#endif
         
         HOGDescriptor *hog= new HOGDescriptor (cvSize(48,48),cvSize(24,24),cvSize(12,12),cvSize(6,6),9);
         vector<float> descriptors;
@@ -502,9 +501,8 @@ void drawHistImg(const Mat &src,Mat &dst) {
 
 void ShowWindow(const char *title, Mat src, int x, int y) {
 #ifdef SHOWWINDOW
-#endif
     imshow(title,src);
-    //moveWindow( title, x, y );
-
+    moveWindow( title, x, y );
+#endif
 }
 

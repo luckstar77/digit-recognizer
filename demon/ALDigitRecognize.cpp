@@ -9,7 +9,7 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/ml/ml.hpp>
 #include <opencv2/objdetect/objdetect.hpp>
-//#include <unistd.h>
+#include <unistd.h>
 #include "ALRect.hpp"
 #include "ALDigitRecognize.hpp"
 

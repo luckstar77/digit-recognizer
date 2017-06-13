@@ -17,6 +17,6 @@ int main(int argc,char** argv)
     
     printf("callback : %d, %c, %c, %c, %c, %c", result[0], result[1], result[2], result[3], result[4], result[5]);
     
-	system("pause");
+	//system("pause");
 	waitKey(0);
 }

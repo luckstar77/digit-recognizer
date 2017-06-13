@@ -9,7 +9,13 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/ml/ml.hpp>
 #include <opencv2/objdetect/objdetect.hpp>
+#ifdef WINDOWS
+#include <direct.h>
+#define GetCurrentDir _getcwd
+#else
 #include <unistd.h>
+#define GetCurrentDir getcwd
+#endif
 #include <time.h> 
 #include "ALRect.hpp"
 #include "ALDigitRecognize.hpp"
@@ -206,7 +212,7 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf, cha
         addWeighted(roi2,0,roi,1,0,roi2);
         
 #ifdef SHOWWINDOW
-        //getcwd(title, 1000);
+        GetCurrentDir(title, 1000);
         cout << title << "/train/tmp/" << endl;
         sprintf(title, "%s/train/tmp/%d_%d.bmp", title, 1, rand());
         ShowWindow(title, trainRoi, WIDTH * 1.5, 0 + trainRoi.rows * ((i) * 2 ));

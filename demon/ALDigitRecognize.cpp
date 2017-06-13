@@ -9,6 +9,13 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/ml/ml.hpp>
 #include <opencv2/objdetect/objdetect.hpp>
+#ifdef WINDOWS
+#include <direct.h>
+#define GetCurrentDir _getcwd
+#else
+#include <unistd.h>
+#define GetCurrentDir getcwd
+#endif
 #include <time.h> 
 #include <unistd.h>
 #include "ALRect.hpp"
@@ -32,8 +39,7 @@ void ShowWindow(const char *title, Mat src, int x, int y);
 void drawHistImg(const Mat &src, Mat &dst);
 
 unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf, char *svmFilePath) {
-#ifdef SHOWWINDOW 
-
+#ifdef SHOWWINDOW
     srand(time(NULL));
 #endif
     static unsigned char result[7] = {0};
@@ -209,6 +215,7 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf, cha
 #ifdef SHOWWINDOW
 
         getcwd(title, 1000);
+        GetCurrentDir(title, 1000);
         cout << title << "/train/tmp/" << endl;
         sprintf(title, "%s/train/tmp/%d_%d.bmp", title, 1, rand());
         ShowWindow(title, trainRoi, WIDTH * 1.5, 0 + trainRoi.rows * ((i) * 2 ));
@@ -503,7 +510,6 @@ void drawHistImg(const Mat &src,Mat &dst) {
 
 void ShowWindow(const char *title, Mat src, int x, int y) {
 #ifdef SHOWWINDOW
-
     imshow(title,src);
     moveWindow( title, x, y );
 #endif

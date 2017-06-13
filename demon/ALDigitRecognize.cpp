@@ -178,7 +178,7 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf, cha
         int height = iter->second._height;
         int count = iter->second._count;
         int cy = HEIGHT / 2;
-        bool isShow =  y <= cy && y + height >= cy && count >= 70 && count <= 760 && height >=17 && height < 45 ? true : false;
+        bool isShow =  y <= cy && y + height >= cy && count >= 40 && count <= 760 && height >=17 && height < 45 && width >= 5 && width < 45 ? true : false;
         char title[1000] ;
         if(isShow) {
             numeric.push_back(iter->second);
@@ -193,13 +193,6 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf, cha
     sort(numeric.begin(),numeric.end(),SortLtx);
     
     for(int i=0; i<numeric.size(); i++) {
-        if (i >= numericMax) {
-            result[0] = 7;
-            break;
-        } else if (i + 1 == numericMax) {
-            result[0] = 0;
-        }
-        
         char title[1000] ;
         cout << "numeric ltx, lty, width, height, count : " << numeric[i]._ltx << ", " << numeric[i]._lty << ", " << numeric[i]._width << ", " << numeric[i]._height << ", " << numeric[i]._count << endl;
         sprintf(title, "numeric : %d", i);
@@ -232,11 +225,12 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf, cha
         }
         int ret = svm.predict(SVMtrainMat);
         
-        if(i < numericMax) {
-            result[i + 1] = ret + 48;
+        result[i + 1] = ret + 48;
+        
+        if(i + 1 == numericMax) {
+            result[0] = 0;
+            break;
         }
-        else{
-            break;}
     }
     //
     

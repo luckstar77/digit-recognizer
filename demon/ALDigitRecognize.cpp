@@ -214,7 +214,7 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf, cha
 #ifdef SHOWWINDOW
         GetCurrentDir(title, 1000);
         cout << title << "/train/tmp/" << endl;
-        sprintf(title, "%s/train/tmp/%d_%d.bmp", title, 1, rand());
+        sprintf(title, "%s/train/tmp/%d_%d.bmp", title, type, rand());
         ShowWindow(title, trainRoi, WIDTH * 1.5, 0 + trainRoi.rows * ((i) * 2 ));
         imwrite(title, trainRoi);
 #endif

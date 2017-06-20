@@ -55,6 +55,7 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf, cha
     
     cvtColor(src,src_gray,COLOR_BGR2GRAY);
     cvtColor(src,src_down,COLOR_BGR2GRAY);
+
     int histSize = 256;
     float rang[] = {0,255};
     const float* histRange = {rang};
@@ -90,8 +91,7 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf, cha
         else
             break;
     }
-    //equalizeHist(src_gray,src_gray);
-    
+    //equalizeHist(src_gray,src_gray);    
     //dilate(src_gray,src_gray,Mat(),Point(-1,-1),1);
     calcHist(&src_gray,1,0,Mat(),histImg,1,&histSize,&histRange);
     showHistImg = Mat(256,256,CV_8UC1,Scalar(255));
@@ -99,7 +99,7 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf, cha
     ShowWindow((const char *)"srcHistimg2", showHistImg, 0, HEIGHT * 3);
     
     dilate(src_gray,src_gray,Mat(),Point(-1,-1),1);
-    //medianBlur(src_gray,src_gray,3);
+    //medianBlur(src_gray,src_gray,5);
     ShowWindow((const char *)"Grayimage", src_gray, 0, 0);
     
     int T =0;
@@ -186,7 +186,7 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf, cha
         int height = iter->second._height;
         int count = iter->second._count;
         int cy = HEIGHT / 2;
-        bool isShow =  y <= cy && y + height >= cy && count >= 40 && count <= 760 && height >=17 && height < 45 && width >= 5 && width < 45 ? true : false;
+        bool isShow =  y <= cy && y + height >= cy && x > 20 && count >= 40 && count <= 760 && height >=17 && height < 45 && width >= 5 && width < 45 ? true : false;
         char title[1000] ;
         if(isShow) {
             numeric.push_back(iter->second);

@@ -91,7 +91,7 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf, cha
         else
             break;
     }
-    //equalizeHist(src_gray,src_gray);    
+
     //dilate(src_gray,src_gray,Mat(),Point(-1,-1),1);
     calcHist(&src_gray,1,0,Mat(),histImg,1,&histSize,&histRange);
     showHistImg = Mat(256,256,CV_8UC1,Scalar(255));
@@ -179,6 +179,22 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf, cha
     trainTempImg.setTo(Scalar::all(0));
     int counts = 0;
     map<int, ALRect>::iterator iter;
+    int ROILX = 0;
+    int ROIRX = WIDTH;
+    for(iter = component.begin(); iter != component.end(); iter++) {
+        int x = iter->second._ltx;
+        int y = iter->second._lty;
+        int width = iter->second._width;
+        int height = iter->second._height;
+        int count = iter->second._count;
+        if(width > WIDTH / 2) {
+            ROILX = x;
+            ROIRX = x + width;
+            break;
+        }
+    }
+    printf("ROI X RANGE : %d, %d\n", ROILX, ROIRX);
+    
     for(iter = component.begin(); iter != component.end(); iter++) {
         int x = iter->second._ltx;
         int y = iter->second._lty;
@@ -186,7 +202,7 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf, cha
         int height = iter->second._height;
         int count = iter->second._count;
         int cy = HEIGHT / 2;
-        bool isShow =  y <= cy && y + height >= cy && x > 20 && count >= 40 && count <= 760 && height >=17 && height < 45 && width >= 5 && width < 45 ? true : false;
+        bool isShow =  y <= cy && y + height >= cy && count >= 40 && count <= 760 && height >=16 && height < 45 && width >= 4 && width < 45 && x > ROILX && x + width < ROIRX ? true : false;
         char title[1000] ;
         if(isShow) {
             numeric.push_back(iter->second);

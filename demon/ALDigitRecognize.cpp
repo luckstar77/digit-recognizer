@@ -162,6 +162,7 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf, cha
     threshold(src_gray,thres,T,1,THRESH_BINARY);
     threshold(src_down,src_down,T + light,255,THRESH_BINARY);
     ShowWindow((const char *)"ALthreshold", dst, WIDTH * 2, 0);
+    ShowWindow((const char *)"src_down", src_down, WIDTH * 1, 0);
     
     Mat labelImg ;
     IcvprCcaByTwoPass(thres, labelImg) ;
@@ -202,7 +203,7 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf, cha
         int height = iter->second._height;
         int count = iter->second._count;
         int cy = HEIGHT / 2;
-        bool isShow =  y <= cy && y + height >= cy && count >= 40 && count <= 760 && height >=16 && height < 45 && width >= 4 && width < 45 && x > ROILX && x + width < ROIRX ? true : false;
+        bool isShow =  y <= cy && y + height >= cy && count >= 36 && count <= 760 && height >=14 && height < 45 && width >= 4 && width < 45 && x > ROILX && x + width < ROIRX ? true : false;
         char title[1000] ;
         if(isShow) {
             numeric.push_back(iter->second);

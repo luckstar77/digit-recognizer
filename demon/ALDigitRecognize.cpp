@@ -99,6 +99,7 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf, cha
     ShowWindow((const char *)"srcHistimg2", showHistImg, 0, HEIGHT * 3);
     
     dilate(src_gray,src_gray,Mat(),Point(-1,-1),1);
+//    erode(src_gray,src_gray,Mat(),Point(-1,-1),1);
     //medianBlur(src_gray,src_gray,5);
     ShowWindow((const char *)"Grayimage", src_gray, 0, 0);
     

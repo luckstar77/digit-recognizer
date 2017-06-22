@@ -97,7 +97,7 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf, cha
     showHistImg = Mat(256,256,CV_8UC1,Scalar(255));
     drawHistImg(histImg,showHistImg);
     ShowWindow((const char *)"srcHistimg2", showHistImg, 0, HEIGHT * 3);
-    
+
     dilate(src_gray,src_gray,Mat(),Point(-1,-1),1);
 //    erode(src_gray,src_gray,Mat(),Point(-1,-1),1);
     //medianBlur(src_gray,src_gray,5);

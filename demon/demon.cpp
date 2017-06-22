@@ -45,6 +45,7 @@ int main(int argc,char** argv)
         string path = argv[4] + string("/") + folders[i];
         int type = 0;
         
+        
         int idx = folders[i].find('.');
         string typeStr = folders[i].substr(0,idx);
         if (typeStr.find("F") != -1) typeStr = typeStr.substr(1, 3);
@@ -61,17 +62,28 @@ int main(int argc,char** argv)
             if(files[i].find(".bmp") != -1) {
                 Mat image = imread(file,CV_LOAD_IMAGE_COLOR);
                 unsigned char *result;
-                if(!image.data)
-                {
-                    continue;
-                }
+                
+                if(!image.data) continue;
+                
+                idx = files[i].find('.');
+                string comparisonStr = files[i].substr(0,idx);
+                if (comparisonStr.find("F") != -1) comparisonStr = comparisonStr.substr(0, comparisonStr.find("F"));
+                
                 count++;
                 
                 result = ALDigitRecognize(type, image.data, argv[2]);
                 
                 printf("callback : %d, %c, %c, %c, %c, %c\n", result[0], result[1], result[2], result[3], result[4], result[5]);
                 
-                if(result[0] == 0) {
+                bool isSuccess = !result[0];
+                for(int k = 0; k < comparisonStr.length(); k++) {
+                    if(result[k+1] != comparisonStr.at(k)) {
+                        isSuccess = false;
+                        break;
+                    }
+                 }
+                
+                if(isSuccess) {
                     fp << file << endl;
                     fp << result[1] << result[2] << result[3] << result[4] << result[5] << endl;
                     success++;

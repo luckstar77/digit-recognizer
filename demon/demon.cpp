@@ -115,15 +115,15 @@ int main(int argc,char** argv)
 }
 
 int getdir(string dir, vector<string> &files){
-    DIR *dp;//創立資料夾指標
+    DIR *dp;//?��?資�?夾�?�?
     struct dirent *dirp;
     if((dp = opendir(dir.c_str())) == NULL){
         cout << "Error(" << errno << ") opening " << dir << endl;
         return errno;
     }
-    while((dirp = readdir(dp)) != NULL){//如果dirent指標非空
-        files.push_back(string(dirp->d_name));//將資料夾和檔案名放入vector
+    while((dirp = readdir(dp)) != NULL){//如�?dirent?��??�空
+        files.push_back(string(dirp->d_name));//將�??�夾?��?案�??�入vector
     }
-    closedir(dp);//關閉資料夾指標
+    closedir(dp);//?��?資�?夾�?�?
     return 0;
 }

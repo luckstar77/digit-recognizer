@@ -16,8 +16,7 @@
 #include <unistd.h>
 #define GetCurrentDir getcwd
 #endif
-#include <time.h> 
-#include <unistd.h>
+#include <time.h>
 #include "ALRect.hpp"
 #include "ALDigitRecognize.hpp"
 
@@ -91,7 +90,8 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf, cha
         else
             break;
     }
-
+    
+//    equalizeHist(src_gray,src_gray);
     //dilate(src_gray,src_gray,Mat(),Point(-1,-1),1);
     calcHist(&src_gray,1,0,Mat(),histImg,1,&histSize,&histRange);
     showHistImg = Mat(256,256,CV_8UC1,Scalar(255));

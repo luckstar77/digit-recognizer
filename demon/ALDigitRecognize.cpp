@@ -33,11 +33,11 @@ Scalar IcvprGetRandomColor();
 void IcvprLabelColor(const Mat& _labelImg, Mat& _colorLabelImg);
 bool SortLtx(const ALRect lhs,const ALRect rhs);
 void drawHisImg(const Mat &src,Mat &dst);
-short SetNumericMax(unsigned char type);
+short SetNumericMax(int type);
 void ShowWindow(const char *title, Mat src, int x, int y);
 void drawHistImg(const Mat &src, Mat &dst);
 
-unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf, char *svmFilePath) {
+unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFilePath) {
 #ifdef SHOWWINDOW
     srand(time(NULL));
 #endif
@@ -238,7 +238,6 @@ unsigned char *ALDigitRecognize(unsigned char type, unsigned char *imageBuf, cha
 
         getcwd(title, 1000);
         GetCurrentDir(title, 1000);
-        cout << title << "/train/tmp/" << endl;
         sprintf(title, "%s/train/tmp/%d_%d.bmp", title, type, rand());
         ShowWindow(title, trainRoi, WIDTH * 1.5, 0 + trainRoi.rows * ((i) * 2 ));
         imwrite(title, trainRoi);
@@ -457,51 +456,74 @@ void IcvprLabelColor(const Mat& _labelImg, Mat& _colorLabelImg)
     }
 }
 
-short SetNumericMax(unsigned char type) {
+short SetNumericMax(int type) {
     switch(type) {
         case 1:
+        case 211:
+            return 4;
+            break;
+        case 2:
+        case 311:
+            return 4;
+            break;
+        case 3:
+        case 312:
             return 4;
             break;
         case 4:
+        case 321:
             return 4;
             break;
         case 5:
+        case 322:
             return 4;
             break;
         case 6:
+        case 331:
             return 4;
             break;
         case 7:
+        case 411:
             return 4;
             break;
         case 8:
+        case 421:
             return 5;
             break;
         case 9:
+        case 431:
             return 4;
             break;
         case 10:
+        case 441:
             return 5;
             break;
         case 11:
+        case 511:
             return 4;
             break;
         case 12:
+        case 512:
             return 4;
             break;
         case 13:
+        case 521:
             return 4;
             break;
         case 14:
+        case 522:
             return 4;
             break;
         case 15:
+        case 611:
             return 4;
             break;
         case 16:
+        case 621:
             return 4;
             break;
         case 17:
+        case 622:
             return 4;
             break;
         default:

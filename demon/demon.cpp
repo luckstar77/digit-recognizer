@@ -136,6 +136,6 @@ int getdir(string dir, vector<string> &files){
     while((dirp = readdir(dp)) != NULL){//å¦‚æ?dirent?‡æ??žç©º
         files.push_back(string(dirp->d_name));//å°‡è??™å¤¾?Œæ?æ¡ˆå??¾å…¥vector
     }
-    closedir(dp);//?œé?è³‡æ?å¤¾æ?æ¨?
+    closedir(dp);
     return 0;
 }

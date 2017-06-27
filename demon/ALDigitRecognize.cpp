@@ -165,8 +165,8 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
     
     
     //imshow("adaptiv",test);
-    threshold(src_down,src_down,T + light,255,THRESH_BINARY);
-    Canny(src_gray, dst, 50, 150, 3);
+    threshold(src_down,src_down,0,255,THRESH_BINARY);
+    Canny(src_gray, dst, 0, T, 3);
 //    dilate(dst,dst,Mat(),Point(-1,-1),1);
 //    erode(dst,dst,Mat(),Point(-1,-1),1);
     ShowWindow((const char *)"canny", dst, WIDTH * 1, HEIGHT * 2);
@@ -204,7 +204,6 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
         float ratio = (float)width / (float)height;
         int cy = HEIGHT / 2;
         bool isShow =  y <= cy && y + height >= cy && width > 150 && width < 200 ? true : false;
-        
         if(isShow) {
             cout << "ROIRects ltx, lty, width, height, count, ratio : " << ROIRects[i]._ltx << ", " << ROIRects[i]._lty << ", " << ROIRects[i]._width << ", " << ROIRects[i]._height << ", " << ROIRects[i]._count << ", " << ratio << endl;
             
@@ -215,6 +214,7 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
             ShowWindow((const char *)"imageROI", imageROI, WIDTH * 1, HEIGHT * 4);
         }
     }
+    if (imageROI.empty()) imageROI=src_gray(Rect(0,0,WIDTH,HEIGHT));
     
     
     minMaxIdx(imageROI,&Tmin,&Tmax);

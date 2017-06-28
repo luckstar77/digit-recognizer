@@ -55,62 +55,77 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
     cvtColor(src,src_gray,COLOR_BGR2GRAY);
     cvtColor(src,src_down,COLOR_BGR2GRAY);
 
-
+     Mat test ,test2, test3,test4;
 	Mat srcimg = src;
-	Mat matimg = imread("D:\\OCR\\digital-recognize\\demon\\images\\06.VY3A\\m3.bmp");
+	cvtColor(srcimg,test,COLOR_BGR2GRAY);
+	test2 = Mat(srcimg.rows,srcimg.cols,CV_8U);
+	test3 = Mat(srcimg.rows,srcimg.cols,CV_8U);
+	
+	Mat kernel2(1,2,CV_32F,Scalar(0));
+	kernel2.at<float>(0,0) = -1.0;
+	kernel2.at<float>(0,1) = 1.0;
+	test.copyTo(test2);
+	test.copyTo(test3);
+	//filter2D(test,test4,0,kernel2);
+	medianBlur(test2,test2,3);
+	medianBlur(test3,test3,5);
+	test3 = test;
 	Mat displayImg = srcimg.clone();
 	Mat resultimg;
-	srcimg.convertTo(srcimg,-1,1,40);
+	add(test,test2,test4);
+	//add(test4,test3,test4);
+	//Canny(test4,test4,150,200,3);
+	//ShowWindow((const char *)"mathimg2", test2, 900, 500);
+	//test4.convertTo(test4,-1,1,-50);
+	ShowWindow((const char *)"mathimg", test4, 900, 200);
+	//srcimg.convertTo(srcimg,-1,1,25);
 	//matimg.convertTo(matimg,-1,2,1);
-	resultimg.create(srcimg.rows - matimg.rows +1,srcimg.cols - matimg.cols +1,CV_32FC1);
+	/*resultimg.create(srcimg.rows - matimg.rows +1,srcimg.cols - matimg.cols +1,CV_32FC1);
 	matchTemplate(srcimg,matimg,resultimg,CV_TM_SQDIFF);
 	double minval;
 	Point minLoc;
 	minMaxLoc(resultimg,&minval,0,&minLoc,0);
 	displayImg=src(Rect(minLoc.x-80,minLoc.y + 20,110,40));
-	rectangle(srcimg,minLoc,Point(minLoc.x+matimg.cols,minLoc.y+matimg.rows),Scalar::all(0),3);
-	ShowWindow((const char *)"mathimg", srcimg, 900, 200);
-	ShowWindow((const char *)"mathimg2", displayImg, 900, 500);
-	Mat test ,test2, test3;
+	rectangle(srcimg,minLoc,Point(minLoc.x+matimg.cols,minLoc.y+matimg.rows),Scalar::all(0),3);*/
+	/*ShowWindow((const char *)"mathimg", srcimg, 900, 200);
+	ShowWindow((const char *)"mathimg2", displayImg, 900, 500);*/
+	
 	//Mat kernel(2,1,CV_32F,Scalar(0));
 	//kernel.at<float>(0,0) = -1.0;
 	//kernel.at<float>(1,0) = 1.0;
 	//filter2D(src_gray,test,-1,kernel);
 
-	//Mat kernel2(1,2,CV_32F,Scalar(0));
-	//kernel2.at<float>(0,0) = -1.0;
-	//kernel2.at<float>(0,1) = 1.0;
 	//filter2D(src_gray,test2,-1,kernel2);
-	medianBlur(src_gray,test3,5);
-	medianBlur(test3,test3,3);
-	//test3 = src_gray;
-	test3.convertTo(test3,-1,2,50);
+	//medianBlur(src_gray,test3,5);
+	//medianBlur(test3,test3,3);
+	////test3 = src_gray;
+	//test3.convertTo(test3,-1,2,50);
 
-	ShowWindow((const char *)"test1", test3, 100, 200);
+	//ShowWindow((const char *)"test1", test3, 100, 200);
 
-	//blur(test3,test3,1);
-	Canny(test3,test3,80,150,3);
-	dilate(test3,test3,Mat(),Point(-1,-1),1);
-	//adaptiveThreshold(src_gray, test, 255, ADAPTIVE_THRESH_MEAN_C, THRESH_BINARY,15, 0);
-    //threshold(src_gray,test,120,255,THRESH_BINARY);
-	ShowWindow((const char *)"test2", test3, 100, 400);
+	////blur(test3,test3,1);
+	//Canny(test3,test3,80,150,3);
+	//dilate(test3,test3,Mat(),Point(-1,-1),1);
+	////adaptiveThreshold(src_gray, test, 255, ADAPTIVE_THRESH_MEAN_C, THRESH_BINARY,15, 0);
+ //   //threshold(src_gray,test,120,255,THRESH_BINARY);
+	//ShowWindow((const char *)"test2", test3, 100, 400);
 
-	////erode(test,test,Mat(),Point(-1,-1),2);	
-	//dilate(test,test,Mat(),Point(-1,-1),1);
-	
-	add(src_gray,test3,test2);
-	ShowWindow((const char *)"test3", test2, 100, 600);
-	threshold(test2,test2,130,255,THRESH_BINARY_INV);
-	ShowWindow((const char *)"test4", test2, 100, 800);
+	//////erode(test,test,Mat(),Point(-1,-1),2);	
+	////dilate(test,test,Mat(),Point(-1,-1),1);
+	//
+	//add(src_gray,test3,test2);
+	//ShowWindow((const char *)"test3", test2, 100, 600);
+	//threshold(test2,test2,130,255,THRESH_BINARY_INV);
+	//ShowWindow((const char *)"test4", test2, 100, 800);
 
     int histSize = 256;
     float rang[] = {0,255};
     const float* histRange = {rang};
     Mat histImg;
-    calcHist(&src_gray,1,0,Mat(),histImg,1,&histSize,&histRange);
+    calcHist(&test4,1,0,Mat(),histImg,1,&histSize,&histRange);
     Mat showHistImg(256,256,CV_8UC1,Scalar(255));
     drawHistImg(histImg,showHistImg);
-    //ShowWindow((const char *)"srcHistimg", showHistImg, 0, HEIGHT * 1.5);
+    ShowWindow((const char *)"srcHistimg", showHistImg, 0, HEIGHT * 1.5);
     
     while(true)
     {
@@ -140,23 +155,24 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
     }
 	//equalizeHist(src_gray,src_gray);
     //dilate(src_gray,src_gray,Mat(),Point(-1,-1),1);
-    calcHist(&src_gray,1,0,Mat(),histImg,1,&histSize,&histRange);
+    calcHist(&test4,1,0,Mat(),histImg,1,&histSize,&histRange);
     showHistImg = Mat(256,256,CV_8UC1,Scalar(255));
     drawHistImg(histImg,showHistImg);
-    //ShowWindow((const char *)"srcHistimg2", showHistImg, 0, HEIGHT * 3);
+    ShowWindow((const char *)"srcHistimg2", showHistImg, 0, HEIGHT * 3);
 
 
 
     //adaptiveThreshold(src_gray, test, 255, ADAPTIVE_THRESH_MEAN_C, THRESH_BINARY,85, 0);
     //medianBlur(test,test,3);
-	//dilate(test,test,Mat(),Point(-1,-1),1);
+	dilate(test4,test4,Mat(),Point(-1,-1),1);
 	//ShowWindow((const char *)"adaptiveThreshold", test, 0, 0);
 
     dilate(src_gray,src_gray,Mat(),Point(-1,-1),1);
 //    erode(src_gray,src_gray,Mat(),Point(-1,-1),1);
     //medianBlur(src_gray,src_gray,5);
     ShowWindow((const char *)"Grayimage", src_gray, 0, 0);
-    
+ //   src_gray = test4;
+	//src_down = test4;
     int T =0;
     double Tmax;
     double Tmin;;
@@ -212,7 +228,7 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
     
     //imshow("adaptiv",test);
     threshold(src_gray,dst,T,255,THRESH_BINARY);
-    threshold(test2,thres,T,1,THRESH_BINARY);
+    threshold(src_gray,thres,T,1,THRESH_BINARY);
     threshold(src_down,src_down,T + light,255,THRESH_BINARY);
     ShowWindow((const char *)"ALthreshold", dst, WIDTH * 2, 0);
     ShowWindow((const char *)"src_down", src_down, WIDTH * 1, 0);

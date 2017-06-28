@@ -105,7 +105,7 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
 	//dilate(test,test,Mat(),Point(-1,-1),1);
 	//ShowWindow((const char *)"adaptiveThreshold", test, 0, 0);
 
-    //dilate(src_gray,src_gray,Mat(),Point(-1,-1),1);
+    dilate(src_gray,src_gray,Mat(),Point(-1,-1),1);
 	//erode(src_gray,src_gray,Mat(),Point(-1,-1),1);
     //medianBlur(src_gray,src_gray,5);
     ShowWindow((const char *)"Grayimage", src_gray, 0, 0);
@@ -166,7 +166,8 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
     
     //imshow("adaptiv",test);
     threshold(src_down,src_down,0,255,THRESH_BINARY);
-    Canny(src_gray, dst, 0, T, 3);
+   
+	Canny(src_gray, dst, 0, T, 3);
     //dilate(dst,dst,Mat(),Point(-1,-1),1);
 //    erode(dst,dst,Mat(),Point(-1,-1),1);
     ShowWindow((const char *)"canny", dst, WIDTH * 1, HEIGHT * 2);
@@ -319,7 +320,7 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
             sprintf(title, "component : %d", iter->first);
             cout << "component ltx, lty, width, height, count : " << iter->second._ltx << ", " << iter->second._lty << ", " << iter->second._width << ", " << iter->second._height << ", " << iter->second._count << endl;
             Mat roi = src_down( Rect(iter->second._ltx,iter->second._lty,iter->second._width,iter->second._height) );
-            ShowWindow(title, roi, WIDTH * 4, 0 + roi.rows * ((counts++) * 3));
+			ShowWindow(title, roi, WIDTH * 4, 0 + roi.rows * ((counts++) * 3));
         }
     }
     

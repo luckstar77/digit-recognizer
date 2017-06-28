@@ -227,9 +227,9 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
     
     
     //imshow("adaptiv",test);
-    threshold(src_gray,dst,T,255,THRESH_BINARY);
-    threshold(src_gray,thres,T,1,THRESH_BINARY);
-    threshold(src_down,src_down,T + light,255,THRESH_BINARY);
+    threshold(src_gray,dst,T-29,255,THRESH_BINARY);
+    threshold(src_gray,thres,T-29,1,THRESH_BINARY);
+    threshold(src_down,src_down,T-29 + light,255,THRESH_BINARY);
     ShowWindow((const char *)"ALthreshold", dst, WIDTH * 2, 0);
     ShowWindow((const char *)"src_down", src_down, WIDTH * 1, 0);
     

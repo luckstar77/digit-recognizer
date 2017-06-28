@@ -65,7 +65,7 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
     Mat showHistImg(256,256,CV_8UC1,Scalar(255));
     drawHistImg(histImg,showHistImg);
     ShowWindow((const char *)"srcHistimg", showHistImg, 0, HEIGHT * 1.5);
-    
+
     while(true)
     {
         int piexl[3] = {0};
@@ -99,14 +99,14 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
     drawHistImg(histImg,showHistImg);
     ShowWindow((const char *)"srcHistimg2", showHistImg, 0, HEIGHT * 3);
 
-	Mat test ;
-    adaptiveThreshold(src_gray, test, 255, ADAPTIVE_THRESH_MEAN_C, THRESH_BINARY,85, 0);
+	//Mat test ;
+    //adaptiveThreshold(src_gray, test, 255, ADAPTIVE_THRESH_MEAN_C, THRESH_BINARY,85, 0);
     //medianBlur(test,test,3);
 	//dilate(test,test,Mat(),Point(-1,-1),1);
-	ShowWindow((const char *)"adaptiveThreshold", test, 0, 0);
+	//ShowWindow((const char *)"adaptiveThreshold", test, 0, 0);
 
     //dilate(src_gray,src_gray,Mat(),Point(-1,-1),1);
-//    erode(src_gray,src_gray,Mat(),Point(-1,-1),1);
+	//erode(src_gray,src_gray,Mat(),Point(-1,-1),1);
     //medianBlur(src_gray,src_gray,5);
     ShowWindow((const char *)"Grayimage", src_gray, 0, 0);
     
@@ -167,7 +167,7 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
     //imshow("adaptiv",test);
     threshold(src_down,src_down,0,255,THRESH_BINARY);
     Canny(src_gray, dst, 0, T, 3);
-//    dilate(dst,dst,Mat(),Point(-1,-1),1);
+    //dilate(dst,dst,Mat(),Point(-1,-1),1);
 //    erode(dst,dst,Mat(),Point(-1,-1),1);
     ShowWindow((const char *)"canny", dst, WIDTH * 1, HEIGHT * 2);
     vector<vector<Point>> contours;

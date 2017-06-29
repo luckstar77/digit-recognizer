@@ -106,7 +106,7 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
 	//ShowWindow((const char *)"adaptiveThreshold", test, 0, 0);
 
     dilate(src_gray,src_gray,Mat(),Point(-1,-1),1);
-//    erode(src_gray,src_gray,Mat(),Point(-1,-1),1);
+	//erode(src_gray,src_gray,Mat(),Point(-1,-1),1);
     //medianBlur(src_gray,src_gray,5);
     ShowWindow((const char *)"Grayimage", src_gray, 0, 0);
     

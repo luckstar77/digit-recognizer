@@ -56,7 +56,19 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
     cvtColor(src,src_gray,COLOR_BGR2GRAY);
     cvtColor(src,src_down,COLOR_BGR2GRAY);
     cvtColor(src,src_crop,COLOR_BGR2GRAY);
-
+	
+	Mat test1,test2,test3;
+	src_gray.copyTo(test1);
+	src_gray.copyTo(test2);
+	src_gray.copyTo(test3);
+	medianBlur(test2,test2,3);
+	//medianBlur(test3,test3,5);
+	add(test1,test2,test1);
+	//add(test1,test3,test1);
+	//test1.convertTo(test1,-1,-1,255);
+	ShowWindow((const char *)"test", test1, 0, HEIGHT * 3);
+	
+	//test1.copyTo(src_gray);
     int histSize = 256;
     float rang[] = {0,255};
     const float* histRange = {rang};
@@ -165,10 +177,10 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
     
     
     //imshow("adaptiv",test);
-    threshold(src_down,src_down,0,255,THRESH_BINARY);
-   
-	Canny(src_gray, dst, 0, T, 3);
-    //dilate(dst,dst,Mat(),Point(-1,-1),1);
+    //threshold(src_down,src_down,0,255,THRESH_BINARY);
+   dilate(test1,test1,Mat(),Point(-1,-1),10);
+	Canny(test1, dst, 0, T, 3);
+    //
 //    erode(dst,dst,Mat(),Point(-1,-1),1);
     ShowWindow((const char *)"canny", dst, WIDTH * 1, HEIGHT * 2);
     vector<vector<Point>> contours;
@@ -267,10 +279,10 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
     }
     
     cout << "T2 : " << T << endl;
-
-    threshold(src_gray,dst,T - 29,255,THRESH_BINARY);
-    threshold(src_gray,thres,T - 29,1,THRESH_BINARY);
-    threshold(src_crop,src_down,T - 29,255,THRESH_BINARY);
+	int makeup = -29;
+    threshold(src_gray,dst,T + makeup,255,THRESH_BINARY);
+    threshold(src_gray,thres,T + makeup,1,THRESH_BINARY);
+    threshold(src_down,src_down,T + makeup,255,THRESH_BINARY);
     ShowWindow((const char *)"ALthreshold", dst, WIDTH * 2, 0);
     ShowWindow((const char *)"src_down", src_down, WIDTH * 1, 0);
     
@@ -313,7 +325,7 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
         int height = iter->second._height;
         int count = iter->second._count;
         int cy = HEIGHT / 2;
-        bool isShow =  y <= cy && y + height >= cy && count >= 36 && count <= 760 && height >=14 && height < 45 && width >= 3 && width < 45 && x > ROILX && x + width < ROIRX ? true : false;
+        bool isShow =  y <= cy && y + height >= cy && count >= 36 && count <= 760 && height >=14 && height < 45 && width >= 4 && width < 45 && x > ROILX && x + width < ROIRX ? true : false;
         char title[1000] ;
         if(isShow) {
             numeric.push_back(iter->second);

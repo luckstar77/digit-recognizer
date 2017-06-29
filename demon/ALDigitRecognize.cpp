@@ -93,7 +93,7 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
             break;
     }
 	//equalizeHist(src_gray,src_gray);
-    //dilate(src_gray,src_gray,Mat(),Point(-1,-1),1);
+    //dilate(src_gray,src_gray,Mat(),Point(-1,-1),1);
     calcHist(&src_gray,1,0,Mat(),histImg,1,&histSize,&histRange);
     showHistImg = Mat(256,256,CV_8UC1,Scalar(255));
     drawHistImg(histImg,showHistImg);
@@ -105,7 +105,7 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
 	//dilate(test,test,Mat(),Point(-1,-1),1);
 	ShowWindow((const char *)"adaptiveThreshold", test, 0, 0);
 
-    //dilate(src_gray,src_gray,Mat(),Point(-1,-1),1);
+    dilate(src_gray,src_gray,Mat(),Point(-1,-1),1);
 //    erode(src_gray,src_gray,Mat(),Point(-1,-1),1);
     //medianBlur(src_gray,src_gray,5);
     ShowWindow((const char *)"Grayimage", src_gray, 0, 0);

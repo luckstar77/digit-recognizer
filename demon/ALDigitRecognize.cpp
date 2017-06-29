@@ -60,23 +60,30 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
 	cvtColor(srcimg,test,COLOR_BGR2GRAY);
 	test2 = Mat(srcimg.rows,srcimg.cols,CV_8U);
 	test3 = Mat(srcimg.rows,srcimg.cols,CV_8U);
-	
-	Mat kernel2(1,2,CV_32F,Scalar(0));
-	kernel2.at<float>(0,0) = -1.0;
-	kernel2.at<float>(0,1) = 1.0;
+	//
+	//Mat kernel2(1,3,CV_32F,Scalar(0));
+	//kernel2.at<float>(0,0) = 1.0;
+	//kernel2.at<float>(0,1) = 0.0;
+	//kernel2.at<float>(0,2) = -1.0;
 	test.copyTo(test2);
 	test.copyTo(test3);
-	//filter2D(test,test4,0,kernel2);
+	//filter2D(test,test2,-1,kernel2);
+	//kernel2.at<float>(0,0) = -1.0;
+	//kernel2.at<float>(0,1) = 0.0;
+	//kernel2.at<float>(0,2) = 1.0;
+	//filter2D(test,test3,-1,kernel2);
 	medianBlur(test2,test2,3);
 	medianBlur(test3,test3,5);
-	test3 = test;
+	//test3 = test;
 	Mat displayImg = srcimg.clone();
 	Mat resultimg;
-	add(test,test2,test4);
-	//add(test4,test3,test4);
-	//Canny(test4,test4,150,200,3);
+	add(test,test3,test4);
+	add(test4,test2,test4);
+	//test4.convertTo(test4,-1,-1,255);
+	//equalizeHist(test4,test4);
+	Canny(test4,test4,0,200,3);
 	//ShowWindow((const char *)"mathimg2", test2, 900, 500);
-	//test4.convertTo(test4,-1,1,-50);
+	//dilate(test3,test3,Mat(),Point(-1,-1),1);
 	ShowWindow((const char *)"mathimg", test4, 900, 200);
 	//srcimg.convertTo(srcimg,-1,1,25);
 	//matimg.convertTo(matimg,-1,2,1);
@@ -105,7 +112,7 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
 
 	////blur(test3,test3,1);
 	//Canny(test3,test3,80,150,3);
-	//dilate(test3,test3,Mat(),Point(-1,-1),1);
+	
 	////adaptiveThreshold(src_gray, test, 255, ADAPTIVE_THRESH_MEAN_C, THRESH_BINARY,15, 0);
  //   //threshold(src_gray,test,120,255,THRESH_BINARY);
 	//ShowWindow((const char *)"test2", test3, 100, 400);
@@ -164,15 +171,15 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
 
     //adaptiveThreshold(src_gray, test, 255, ADAPTIVE_THRESH_MEAN_C, THRESH_BINARY,85, 0);
     //medianBlur(test,test,3);
-	dilate(test4,test4,Mat(),Point(-1,-1),1);
+	//dilate(test4,test4,Mat(),Point(-1,-1),1);
 	//ShowWindow((const char *)"adaptiveThreshold", test, 0, 0);
 
-    dilate(src_gray,src_gray,Mat(),Point(-1,-1),1);
+    //dilate(src_gray,src_gray,Mat(),Point(-1,-1),1);
 //    erode(src_gray,src_gray,Mat(),Point(-1,-1),1);
     //medianBlur(src_gray,src_gray,5);
     ShowWindow((const char *)"Grayimage", src_gray, 0, 0);
- //   src_gray = test4;
-	//src_down = test4;
+    src_gray = test4;
+	src_down = test4;
     int T =0;
     double Tmax;
     double Tmin;;

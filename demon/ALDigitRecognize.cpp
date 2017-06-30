@@ -55,77 +55,6 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
     
     cvtColor(src,src_gray,COLOR_BGR2GRAY);
     cvtColor(src,src_down,COLOR_BGR2GRAY);
-    Mat test ,test2, test3,test4;
-	Mat srcimg = src;
-	cvtColor(srcimg,test,COLOR_BGR2GRAY);
-	test2 = Mat(srcimg.rows,srcimg.cols,CV_8U);
-	test3 = Mat(srcimg.rows,srcimg.cols,CV_8U);
-	//
-	//Mat kernel2(1,3,CV_32F,Scalar(0));
-	//kernel2.at<float>(0,0) = 1.0;
-	//kernel2.at<float>(0,1) = 0.0;
-	//kernel2.at<float>(0,2) = -1.0;
-	test.copyTo(test2);
-	test.copyTo(test3);
-	//filter2D(test,test2,-1,kernel2);
-	//kernel2.at<float>(0,0) = -1.0;
-	//kernel2.at<float>(0,1) = 0.0;
-	//kernel2.at<float>(0,2) = 1.0;
-	//filter2D(test,test3,-1,kernel2);
-	medianBlur(test2,test2,3);
-	medianBlur(test3,test3,5);
-	//test3 = test;
-	Mat displayImg = srcimg.clone();
-	Mat resultimg;
-	add(test,test3,test4);
-	add(test4,test2,test4);
-	//test4.convertTo(test4,-1,-1,255);
-	//equalizeHist(test4,test4);
-	Canny(test4,test4,0,200,3);
-	//ShowWindow((const char *)"mathimg2", test2, 900, 500);
-	//dilate(test3,test3,Mat(),Point(-1,-1),1);
-	ShowWindow((const char *)"mathimg", test4, 900, 200);
-	//srcimg.convertTo(srcimg,-1,1,25);
-	//matimg.convertTo(matimg,-1,2,1);
-	/*resultimg.create(srcimg.rows - matimg.rows +1,srcimg.cols - matimg.cols +1,CV_32FC1);
-	matchTemplate(srcimg,matimg,resultimg,CV_TM_SQDIFF);
-	double minval;
-	Point minLoc;
-	minMaxLoc(resultimg,&minval,0,&minLoc,0);
-	displayImg=src(Rect(minLoc.x-80,minLoc.y + 20,110,40));
-	rectangle(srcimg,minLoc,Point(minLoc.x+matimg.cols,minLoc.y+matimg.rows),Scalar::all(0),3);*/
-	/*ShowWindow((const char *)"mathimg", srcimg, 900, 200);
-	ShowWindow((const char *)"mathimg2", displayImg, 900, 500);*/
-	
-	//Mat kernel(2,1,CV_32F,Scalar(0));
-	//kernel.at<float>(0,0) = -1.0;
-	//kernel.at<float>(1,0) = 1.0;
-	//filter2D(src_gray,test,-1,kernel);
-
-	//filter2D(src_gray,test2,-1,kernel2);
-	//medianBlur(src_gray,test3,5);
-	//medianBlur(test3,test3,3);
-	////test3 = src_gray;
-	//test3.convertTo(test3,-1,2,50);
-
-	//ShowWindow((const char *)"test1", test3, 100, 200);
-
-	////blur(test3,test3,1);
-	//Canny(test3,test3,80,150,3);
-	
-	////adaptiveThreshold(src_gray, test, 255, ADAPTIVE_THRESH_MEAN_C, THRESH_BINARY,15, 0);
- //   //threshold(src_gray,test,120,255,THRESH_BINARY);
-	//ShowWindow((const char *)"test2", test3, 100, 400);
-
-	//////erode(test,test,Mat(),Point(-1,-1),2);	
-	////dilate(test,test,Mat(),Point(-1,-1),1);
-	//
-	//add(src_gray,test3,test2);
-	//ShowWindow((const char *)"test3", test2, 100, 600);
-	//threshold(test2,test2,130,255,THRESH_BINARY_INV);
-	//ShowWindow((const char *)"test4", test2, 100, 800);
-
-
     cvtColor(src,src_crop,COLOR_BGR2GRAY);
 	
 	Mat test1,test2,test3;
@@ -176,8 +105,6 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
         else
             break;
     }
-	//equalizeHist(src_gray,src_gray);
-    //dilate(src_gray,src_gray,Mat(),Point(-1,-1),1);
     calcHist(&src_gray,1,0,Mat(),histImg,1,&histSize,&histRange);
     showHistImg = Mat(256,256,CV_8UC1,Scalar(255));
     drawHistImg(histImg,showHistImg);
@@ -188,19 +115,10 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
     //medianBlur(test,test,3);
 	//dilate(test4,test4,Mat(),Point(-1,-1),1);
 	//ShowWindow((const char *)"adaptiveThreshold", test, 0, 0);
-
-    //dilate(src_gray,src_gray,Mat(),Point(-1,-1),1);
-//    erode(src_gray,src_gray,Mat(),Point(-1,-1),1);
-    //medianBlur(src_gray,src_gray,5);
     ShowWindow((const char *)"Grayimage", src_gray, 0, 0);
  //   src_gray = test4;
 	//src_down = test4;
-	//dilate(test,test,Mat(),Point(-1,-1),1);
-	//ShowWindow((const char *)"adaptiveThreshold", test, 0, 0);
-
     dilate(src_gray,src_gray,Mat(),Point(-1,-1),1);
-	//erode(src_gray,src_gray,Mat(),Point(-1,-1),1);
-    //medianBlur(src_gray,src_gray,5);
     ShowWindow((const char *)"Grayimage", src_gray, 0, 0);
     
     int T =0;
@@ -263,8 +181,6 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
    
     ShowWindow((const char *)"dilate", test1, WIDTH * 1, HEIGHT * 2.5);
 	Canny(test1, dst, 0, T, 3);
-    //
-//    erode(dst,dst,Mat(),Point(-1,-1),1);
     ShowWindow((const char *)"canny", dst, WIDTH * 1, HEIGHT * 2);
     vector<vector<Point>> contours;
     vector<Vec4i> hierarchy;

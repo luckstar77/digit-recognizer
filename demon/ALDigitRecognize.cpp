@@ -64,6 +64,7 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
 	medianBlur(test2,test2,3);
 	//medianBlur(test3,test3,5);
 	add(test1,test2,test1);
+	//erode(test1,test1,Mat(),Point(-1,-1),10);
 	//add(test1,test3,test1);
 	//test1.convertTo(test1,-1,-1,255);
 	ShowWindow((const char *)"test", test1, 0, HEIGHT * 3);
@@ -174,13 +175,13 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
     }
     
     cout << "T : " << T << endl;
-    
-<<<<<<< HEAD
-    
+
     //imshow("adaptiv",test);
     //threshold(src_down,src_down,0,255,THRESH_BINARY);
-   dilate(test1,test1,Mat(),Point(-1,-1),10);
-   ShowWindow((const char *)"dilate", test1, WIDTH * 1, HEIGHT * 2.5);
+   //erode(test1,test1,Mat(),Point(-1,-1),40);
+	dilate(test1,test1,Mat(),Point(-1,-1),10);
+   
+    ShowWindow((const char *)"dilate", test1, WIDTH * 1, HEIGHT * 2.5);
 	Canny(test1, dst, 0, T, 3);
     //
 //    erode(dst,dst,Mat(),Point(-1,-1),1);
@@ -281,21 +282,11 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
     }
     
     cout << "T2 : " << T << endl;
-=======
->>>>>>> cf462bc29b344a38b6cfe6147fca522d1d6424da
+
 	int makeup = -29;
     threshold(src_gray,dst,T + makeup,255,THRESH_BINARY);
 	threshold(src_gray,thres,T + makeup,1,THRESH_BINARY);
-    threshold(src_down,src_down,T + makeup,255,THRESH_BINARY);
-	//if (imageROI.empty()){
-	//	threshold(src_gray,thres,T + makeup,1,THRESH_BINARY);
-	//	threshold(src_down,src_down,T + makeup,255,THRESH_BINARY);
-	// }else
-	// {
-	//	 threshold(src_gray,thres,T,1,THRESH_BINARY);
-	//	 threshold(src_gray,src_down,T ,255,THRESH_BINARY);
-	// }
-    
+    threshold(src_down,src_down,T + makeup,255,THRESH_BINARY);    
     ShowWindow((const char *)"ALthreshold", dst, WIDTH * 2, 0);
     ShowWindow((const char *)"src_down", thres, WIDTH * 1, 0);
     

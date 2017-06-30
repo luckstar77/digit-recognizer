@@ -179,6 +179,7 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
     //imshow("adaptiv",test);
     //threshold(src_down,src_down,0,255,THRESH_BINARY);
    dilate(test1,test1,Mat(),Point(-1,-1),10);
+   ShowWindow((const char *)"dilate", test1, WIDTH * 1, HEIGHT * 2.5);
 	Canny(test1, dst, 0, T, 3);
     //
 //    erode(dst,dst,Mat(),Point(-1,-1),1);
@@ -281,10 +282,19 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
     cout << "T2 : " << T << endl;
 	int makeup = -29;
     threshold(src_gray,dst,T + makeup,255,THRESH_BINARY);
-    threshold(src_gray,thres,T + makeup,1,THRESH_BINARY);
+	threshold(src_gray,thres,T + makeup,1,THRESH_BINARY);
     threshold(src_down,src_down,T + makeup,255,THRESH_BINARY);
+	//if (imageROI.empty()){
+	//	threshold(src_gray,thres,T + makeup,1,THRESH_BINARY);
+	//	threshold(src_down,src_down,T + makeup,255,THRESH_BINARY);
+	// }else
+	// {
+	//	 threshold(src_gray,thres,T,1,THRESH_BINARY);
+	//	 threshold(src_gray,src_down,T ,255,THRESH_BINARY);
+	// }
+    
     ShowWindow((const char *)"ALthreshold", dst, WIDTH * 2, 0);
-    ShowWindow((const char *)"src_down", src_down, WIDTH * 1, 0);
+    ShowWindow((const char *)"src_down", thres, WIDTH * 1, 0);
     
     Mat labelImg ;
     IcvprCcaByTwoPass(thres, labelImg) ;
@@ -297,8 +307,7 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
     
     /*CvSVM svm;
      svm.load("D:\\OCR\\digital-recognize\\demon\\gas.xml");*/
-    Mat trainTempImg= Mat(Size(28,28),8,3);
-    
+    Mat trainTempImg= Mat(Size(28,28),8,3);    
     trainTempImg.setTo(Scalar::all(0));
     int counts = 0;
     map<int, ALRect>::iterator iter;

@@ -175,6 +175,7 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
     
     cout << "T : " << T << endl;
     
+<<<<<<< HEAD
     
     //imshow("adaptiv",test);
     //threshold(src_down,src_down,0,255,THRESH_BINARY);
@@ -280,6 +281,8 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
     }
     
     cout << "T2 : " << T << endl;
+=======
+>>>>>>> cf462bc29b344a38b6cfe6147fca522d1d6424da
 	int makeup = -29;
     threshold(src_gray,dst,T + makeup,255,THRESH_BINARY);
 	threshold(src_gray,thres,T + makeup,1,THRESH_BINARY);

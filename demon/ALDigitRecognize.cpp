@@ -64,6 +64,7 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
 	medianBlur(test2,test2,3);
 	//medianBlur(test3,test3,5);
 	add(test1,test2,test1);
+	//erode(test1,test1,Mat(),Point(-1,-1),10);
 	//add(test1,test3,test1);
 	//test1.convertTo(test1,-1,-1,255);
 	ShowWindow((const char *)"test", test1, 0, HEIGHT * 3);
@@ -174,13 +175,120 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
     }
     
     cout << "T : " << T << endl;
+
+    //imshow("adaptiv",test);
+    //threshold(src_down,src_down,0,255,THRESH_BINARY);
+   //erode(test1,test1,Mat(),Point(-1,-1),40);
+	dilate(test1,test1,Mat(),Point(-1,-1),10);
+   
+    ShowWindow((const char *)"dilate", test1, WIDTH * 1, HEIGHT * 2.5);
+	Canny(test1, dst, 0, T, 3);
+    //
+//    erode(dst,dst,Mat(),Point(-1,-1),1);
+    ShowWindow((const char *)"canny", dst, WIDTH * 1, HEIGHT * 2);
+    vector<vector<Point>> contours;
+    vector<Vec4i> hierarchy;
+    RNG rng(12345);
+    findContours(dst, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
     
+    map<int, ALRect> ROIRects;
+    Mat imageROI;
+    
+    for(int i = 0; i<contours.size(); i++){
+        for(int j = 0; j < contours[i].size(); j++) {
+            int x = contours[i][j].x;
+            int y = contours[i][j].y;
+            if(j > 0) {
+                if(ROIRects[i]._ltx > x)
+                    ROIRects[i].SetLtx(x);
+                if(ROIRects[i]._lty > y)
+                    ROIRects[i].SetLty(y);
+                if(ROIRects[i]._rdx < x)
+                    ROIRects[i].SetRdx(x);
+                if(ROIRects[i]._rdy < y)
+                    ROIRects[i].SetRdy(y);
+                ROIRects[i].AddCount(1);
+            } else {
+                ROIRects[i] = ALRect(x, y, 1, 1, 1);
+            }
+        }
+        int x = ROIRects[i]._ltx;
+        int y = ROIRects[i]._lty;
+        int width = ROIRects[i]._width;
+        int height = ROIRects[i]._height;
+        int count = ROIRects[i]._count;
+        float ratio = (float)width / (float)height;
+        int cy = HEIGHT / 2;
+        bool isShow =  y <= cy && y + height >= cy && width > 150 && width < 200 ? true : false;
+        if(isShow) {
+            cout << "ROIRects ltx, lty, width, height, count, ratio : " << ROIRects[i]._ltx << ", " << ROIRects[i]._lty << ", " << ROIRects[i]._width << ", " << ROIRects[i]._height << ", " << ROIRects[i]._count << ", " << ratio << endl;
+            
+            Scalar color = Scalar( rng.uniform(0, 255), rng.uniform(0, 255), 255);
+            drawContours(dst, contours, i, color, 2, 8, hierarchy);
+            //方法一
+            imageROI=src_gray(Rect(x,y,width,height));
+            ShowWindow((const char *)"imageROI", imageROI, WIDTH * 1, HEIGHT * 4);
+        }
+    }
+    if (imageROI.empty()) imageROI=src_gray(Rect(0,0,WIDTH,HEIGHT));
+    
+    
+    minMaxIdx(imageROI,&Tmin,&Tmax);
+    T = ( Tmax + Tmin ) / 2;
+    printf("Brightness2 MIN, MAX: %f, %f\n", Tmin, Tmax);
+    
+    while(true)
+    {
+        
+        int Tosum =0,Tusum =0;
+        int on = 0,un =0;
+        for(int i = 0;i<imageROI.rows;i++)
+        {
+            for(int j = 0 ;j <imageROI.cols; j++)
+            {
+                if(imageROI.at<uchar>(i,j) >= T )
+                {
+                    Tosum += imageROI.at<uchar>(i,j);
+                    on ++;
+                }
+                else
+                {
+                    Tusum += imageROI.at<uchar>(i,j);
+                    un ++;
+                }
+            }
+        }
+        if(on != 0)
+        {
+            Tosum /=on;
+        }
+        else
+        {
+            Tosum = 0;
+        }
+        if(un != 0)
+        {
+            Tusum /=un;
+        }
+        else
+        {
+            Tusum = 0;
+        }
+        
+        if((Tosum+Tusum) /2  != T)
+            T = (Tosum+Tusum) /2;
+        else
+            break;
+    }
+    
+    cout << "T2 : " << T << endl;
+
 	int makeup = -29;
     threshold(src_gray,dst,T + makeup,255,THRESH_BINARY);
-    threshold(src_gray,thres,T + makeup,1,THRESH_BINARY);
-    threshold(src_down,src_down,T + makeup,255,THRESH_BINARY);
+	threshold(src_gray,thres,T + makeup,1,THRESH_BINARY);
+    threshold(src_down,src_down,T + makeup,255,THRESH_BINARY);    
     ShowWindow((const char *)"ALthreshold", dst, WIDTH * 2, 0);
-    ShowWindow((const char *)"src_down", src_down, WIDTH * 1, 0);
+    ShowWindow((const char *)"src_down", thres, WIDTH * 1, 0);
     
     Mat labelImg ;
     IcvprCcaByTwoPass(thres, labelImg) ;
@@ -193,8 +301,7 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
     
     /*CvSVM svm;
      svm.load("D:\\OCR\\digital-recognize\\demon\\gas.xml");*/
-    Mat trainTempImg= Mat(Size(28,28),8,3);
-    
+    Mat trainTempImg= Mat(Size(28,28),8,3);    
     trainTempImg.setTo(Scalar::all(0));
     int counts = 0;
     map<int, ALRect>::iterator iter;

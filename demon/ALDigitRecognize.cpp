@@ -37,6 +37,8 @@ short SetNumericMax(int type);
 void ShowWindow(const char *title, Mat src, int x, int y);
 void drawHistImg(const Mat &src, Mat &dst);
 
+RNG rng(12345);
+
 unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFilePath) {
 #ifdef SHOWWINDOW
     srand(time(NULL));
@@ -57,18 +59,41 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
     cvtColor(src,src_down,COLOR_BGR2GRAY);
     cvtColor(src,src_crop,COLOR_BGR2GRAY);
 	
-	Mat test1,test2,test3;
+	Mat test1,test2,test3,test21;
 	src_gray.copyTo(test1);
 	src_gray.copyTo(test2);
-	src_gray.copyTo(test3);
+	src_gray.copyTo(test21);
+
 	medianBlur(test2,test2,3);
-	//medianBlur(test3,test3,5);
+	medianBlur(test21,test21,5);
 	add(test1,test2,test1);
-	//erode(test1,test1,Mat(),Point(-1,-1),10);
+	add(test1,test21,test1);
+	
+	//dilate(test1,test1,Mat(),Point(-1,-1),1);
+    test1.copyTo(test3);
 	//add(test1,test3,test1);
 	//test1.convertTo(test1,-1,-1,255);
 	ShowWindow((const char *)"test", test1, 0, HEIGHT * 3);
+	//threshold(test3,test3,125 ,255,THRESH_BINARY);
+	 ShowWindow((const char *)"corners2", test3,300, HEIGHT * 4);
+	vector<Point2f> corners;
+	goodFeaturesToTrack(test3,
+		corners,
+		110,
+		0.01,
+		5,
+		Mat(),
+		3,
+		true,
+		0.04);
 	
+	for(size_t i = 0;i<corners.size();i++)
+	{
+		circle(test3, corners[i],10,IcvprGetRandomColor(),-1,8,0);
+	}
+
+	ShowWindow((const char *)"corners", test3,300, HEIGHT * 5);
+
 	//test1.copyTo(src_gray);
     int histSize = 256;
     float rang[] = {0,255};
@@ -177,10 +202,10 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
     //imshow("adaptiv",test);
     //threshold(src_down,src_down,0,255,THRESH_BINARY);
    //erode(test1,test1,Mat(),Point(-1,-1),40);
-	dilate(test1,test1,Mat(),Point(-1,-1),10);
+	//dilate(test1,test1,Mat(),Point(-1,-1),10);
    
     ShowWindow((const char *)"dilate", test1, WIDTH * 1, HEIGHT * 2.5);
-	Canny(test1, dst, 0, T, 3);
+	Canny(test1, dst, 0, T-29, 3);
     ShowWindow((const char *)"canny", dst, WIDTH * 1, HEIGHT * 2);
     vector<vector<Point>> contours;
     vector<Vec4i> hierarchy;

@@ -288,7 +288,7 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
 	threshold(src_gray,thres,T + makeup,1,THRESH_BINARY);
     threshold(src_down,src_down,T + makeup,255,THRESH_BINARY);    
     ShowWindow((const char *)"ALthreshold", dst, WIDTH * 2, 0);
-    ShowWindow((const char *)"src_down", thres, WIDTH * 1, 0);
+    ShowWindow((const char *)"src_down", src_down, WIDTH * 1, 0);
     
     Mat labelImg ;
     IcvprCcaByTwoPass(thres, labelImg) ;

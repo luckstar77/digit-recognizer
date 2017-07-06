@@ -133,8 +133,8 @@ int getdir(string dir, vector<string> &files){
         cout << "Error(" << errno << ") opening " << dir << endl;
         return errno;
     }
-    while((dirp = readdir(dp)) != NULL){//å¦‚æ?dirent?‡æ??žç©º
-        files.push_back(string(dirp->d_name));//å°‡è??™å¤¾?Œæ?æ¡ˆå??¾å…¥vector
+    while((dirp = readdir(dp)) != NULL){
+        files.push_back(string(dirp->d_name));
     }
     closedir(dp);
     return 0;

@@ -47,85 +47,30 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
     memset( result, 0, 7 * sizeof(unsigned char) );
     result[0] = 1;
     svm.load(svmFilePath);
-    Mat src_gray,dst,thres,src_down,src_crop;
-    int light=0;
+    Mat src_gray,dst,thres,src_down;
     Mat src = Mat(HEIGHT, WIDTH, CV_8UC3, imageBuf);
     short numericMax = SetNumericMax(type);
     ShowWindow((const char *)"src", src, WIDTH * 1.5, HEIGHT * 3);
     
     cvtColor(src,src_gray,COLOR_BGR2GRAY);
     cvtColor(src,src_down,COLOR_BGR2GRAY);
-    cvtColor(src,src_crop,COLOR_BGR2GRAY);
 	
-	Mat test1,test2,test3;
-	src_gray.copyTo(test1);
-	src_gray.copyTo(test2);
-	src_gray.copyTo(test3);
-	medianBlur(test2,test2,3);
-	//medianBlur(test3,test3,5);
-	add(test1,test2,test1);
-	//erode(test1,test1,Mat(),Point(-1,-1),10);
-	//add(test1,test3,test1);
-	//test1.convertTo(test1,-1,-1,255);
-	ShowWindow((const char *)"test", test1, 0, HEIGHT * 3);
-	
-	//test1.copyTo(src_gray);
     int histSize = 256;
     float rang[] = {0,255};
     const float* histRange = {rang};
     Mat histImg;
     calcHist(&src_gray,1,0,Mat(),histImg,1,&histSize,&histRange);
+    equalizeHist(src_gray, histImg);
     Mat showHistImg(256,256,CV_8UC1,Scalar(255));
     drawHistImg(histImg,showHistImg);
-    ShowWindow((const char *)"srcHistimg", showHistImg, 0, HEIGHT * 1.5);
-
-    while(true)
-    {
-        int piexl[3] = {0};
-        for(int i =0;i<src_gray.rows;i++)
-        {
-            for(int j = 0;j< src_gray.cols;j++)
-            {
-                if(src_gray.at<uchar>(i,j) < 120 ){
-                    piexl[0] ++;}
-                else if(src_gray.at<uchar>(i,j) <= 230){
-                    piexl[1] ++;}
-                else {
-                    piexl[2] ++;}
-            }
-        }
-        if(piexl[0] > (piexl[1]+(src_gray.rows *  src_gray.cols) / 6) && piexl[0] > piexl[2]){
-            src_gray.convertTo(src_gray,-1,1,15);
-            light -=15;
-        }
-        else if(piexl[2] > (piexl[1]+(src_gray.rows *  src_gray.cols) / 6) && piexl[2] > piexl[0]){
-            src_gray.convertTo(src_gray,-1,1,-15);
-            light +=15;
-        }
-        else
-            break;
-    }
-	//equalizeHist(src_gray,src_gray);
-    //dilate(src_gray,src_gray,Mat(),Point(-1,-1),1);
-    calcHist(&src_gray,1,0,Mat(),histImg,1,&histSize,&histRange);
-    showHistImg = Mat(256,256,CV_8UC1,Scalar(255));
-    drawHistImg(histImg,showHistImg);
-    ShowWindow((const char *)"srcHistimg2", showHistImg, 0, HEIGHT * 3);
-
-	//Mat test ;
-    //adaptiveThreshold(src_gray, test, 255, ADAPTIVE_THRESH_MEAN_C, THRESH_BINARY,85, 0);
-    //medianBlur(test,test,3);
-	//dilate(test,test,Mat(),Point(-1,-1),1);
-	//ShowWindow((const char *)"adaptiveThreshold", test, 0, 0);
-
+    ShowWindow((const char *)"srcHistimg", histImg, 0, HEIGHT * 1.5);
+    
     dilate(src_gray,src_gray,Mat(),Point(-1,-1),1);
-	//erode(src_gray,src_gray,Mat(),Point(-1,-1),1);
-    //medianBlur(src_gray,src_gray,5);
     ShowWindow((const char *)"Grayimage", src_gray, 0, 0);
     
     int T =0;
     double Tmax;
-    double Tmin;;
+    double Tmin;
     minMaxIdx(src_gray,&Tmin,&Tmax);
     T = ( Tmax + Tmin ) / 2;
     printf("Brightness MIN, MAX: %f, %f\n", Tmin, Tmax);
@@ -176,113 +121,6 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
     
     cout << "T : " << T << endl;
 
-    //imshow("adaptiv",test);
-    //threshold(src_down,src_down,0,255,THRESH_BINARY);
-   //erode(test1,test1,Mat(),Point(-1,-1),40);
-	dilate(test1,test1,Mat(),Point(-1,-1),10);
-   
-    ShowWindow((const char *)"dilate", test1, WIDTH * 1, HEIGHT * 2.5);
-	Canny(test1, dst, 0, T, 3);
-    //
-//    erode(dst,dst,Mat(),Point(-1,-1),1);
-    ShowWindow((const char *)"canny", dst, WIDTH * 1, HEIGHT * 2);
-    vector<vector<Point>> contours;
-    vector<Vec4i> hierarchy;
-    RNG rng(12345);
-    findContours(dst, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
-    
-    map<int, ALRect> ROIRects;
-    Mat imageROI;
-    
-    for(int i = 0; i<contours.size(); i++){
-        for(int j = 0; j < contours[i].size(); j++) {
-            int x = contours[i][j].x;
-            int y = contours[i][j].y;
-            if(j > 0) {
-                if(ROIRects[i]._ltx > x)
-                    ROIRects[i].SetLtx(x);
-                if(ROIRects[i]._lty > y)
-                    ROIRects[i].SetLty(y);
-                if(ROIRects[i]._rdx < x)
-                    ROIRects[i].SetRdx(x);
-                if(ROIRects[i]._rdy < y)
-                    ROIRects[i].SetRdy(y);
-                ROIRects[i].AddCount(1);
-            } else {
-                ROIRects[i] = ALRect(x, y, 1, 1, 1);
-            }
-        }
-        int x = ROIRects[i]._ltx;
-        int y = ROIRects[i]._lty;
-        int width = ROIRects[i]._width;
-        int height = ROIRects[i]._height;
-        int count = ROIRects[i]._count;
-        float ratio = (float)width / (float)height;
-        int cy = HEIGHT / 2;
-        bool isShow =  y <= cy && y + height >= cy && width > 150 && width < 200 ? true : false;
-        if(isShow) {
-            cout << "ROIRects ltx, lty, width, height, count, ratio : " << ROIRects[i]._ltx << ", " << ROIRects[i]._lty << ", " << ROIRects[i]._width << ", " << ROIRects[i]._height << ", " << ROIRects[i]._count << ", " << ratio << endl;
-            
-            Scalar color = Scalar( rng.uniform(0, 255), rng.uniform(0, 255), 255);
-            drawContours(dst, contours, i, color, 2, 8, hierarchy);
-            //方法一
-            imageROI=src_gray(Rect(x,y,width,height));
-            ShowWindow((const char *)"imageROI", imageROI, WIDTH * 1, HEIGHT * 4);
-        }
-    }
-    if (imageROI.empty()) imageROI=src_gray(Rect(0,0,WIDTH,HEIGHT));
-    
-    
-    minMaxIdx(imageROI,&Tmin,&Tmax);
-    T = ( Tmax + Tmin ) / 2;
-    printf("Brightness2 MIN, MAX: %f, %f\n", Tmin, Tmax);
-    
-    while(true)
-    {
-        
-        int Tosum =0,Tusum =0;
-        int on = 0,un =0;
-        for(int i = 0;i<imageROI.rows;i++)
-        {
-            for(int j = 0 ;j <imageROI.cols; j++)
-            {
-                if(imageROI.at<uchar>(i,j) >= T )
-                {
-                    Tosum += imageROI.at<uchar>(i,j);
-                    on ++;
-                }
-                else
-                {
-                    Tusum += imageROI.at<uchar>(i,j);
-                    un ++;
-                }
-            }
-        }
-        if(on != 0)
-        {
-            Tosum /=on;
-        }
-        else
-        {
-            Tosum = 0;
-        }
-        if(un != 0)
-        {
-            Tusum /=un;
-        }
-        else
-        {
-            Tusum = 0;
-        }
-        
-        if((Tosum+Tusum) /2  != T)
-            T = (Tosum+Tusum) /2;
-        else
-            break;
-    }
-    
-    cout << "T2 : " << T << endl;
-
 	int makeup = -29;
     threshold(src_gray,dst,T + makeup,255,THRESH_BINARY);
 	threshold(src_gray,thres,T + makeup,1,THRESH_BINARY);
@@ -301,7 +139,7 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
     
     /*CvSVM svm;
      svm.load("D:\\OCR\\digital-recognize\\demon\\gas.xml");*/
-    Mat trainTempImg= Mat(Size(28,28),8,3);    
+    Mat trainTempImg= Mat(Size(48,48),8,3);
     trainTempImg.setTo(Scalar::all(0));
     int counts = 0;
     map<int, ALRect>::iterator iter;

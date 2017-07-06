@@ -127,7 +127,7 @@ int main(int argc,char** argv)
 }
 
 int getdir(string dir, vector<string> &files){
-    DIR *dp;//?µç?è³‡æ?å¤¾æ?æ¨?
+    DIR *dp;//
     struct dirent *dirp;
     if((dp = opendir(dir.c_str())) == NULL){
         cout << "Error(" << errno << ") opening " << dir << endl;

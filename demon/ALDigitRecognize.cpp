@@ -36,8 +36,7 @@ void drawHisImg(const Mat &src,Mat &dst);
 short SetNumericMax(int type);
 void ShowWindow(const char *title, Mat src, int x, int y);
 void drawHistImg(const Mat &src, Mat &dst);
-
-RNG rng(12345);
+int thresh = 50,N = 11;
 
 unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFilePath) {
 #ifdef SHOWWINDOW
@@ -59,40 +58,118 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
     cvtColor(src,src_down,COLOR_BGR2GRAY);
     cvtColor(src,src_crop,COLOR_BGR2GRAY);
 	
+	Mat src_color,a,b,c;
+	src_gray.copyTo(src_color);
+	equalizeHist(src_color,src_color);
+	src.copyTo(a);
+	src_color.copyTo(b);
+	src_color.copyTo(c);
+	Mat_<Vec3b>::iterator it = a.begin<Vec3b>();
+	Mat_<Vec3b>::iterator itend = a.end<Vec3b>();
+	for(;it!=itend;it++)
+	{
+		if(abs((*it)[0]-(*it)[1]) >20 ||
+			abs((*it)[1]-(*it)[2])>20 ||
+			abs((*it)[0] -(*it)[2])>20)
+		{
+			(*it)[0] = 0;
+			(*it)[1] = 0;
+			(*it)[2] = 0;
+		}
+		else
+		{
+			(*it)[0] = 255;
+			(*it)[1] = 255;
+			(*it)[2] = 255;
+		}		
+	}
+	cvtColor(a,a,COLOR_BGR2GRAY);
+	ShowWindow((const char *)"colorimg11", a,300, HEIGHT * 3);
+	b.convertTo(b,-1,-1,255);
+	int value1=0,value2=0;
+	for(int h =0;h< b.rows;h++)
+	{
+		for(int w=0;w<b.cols-2;w++)
+		{
+			value1 = b.at<uchar>(h,w+2) - b.at<uchar>(h,w);
+			value2 = b.at<uchar>(h,w) - b.at<uchar>(h,w+2);
+			if(value1 > value2)
+				if(value1 < 50)
+					c.at<uchar>(h,w) =0;
+				else
+					c.at<uchar>(h,w) = 255;
+			else
+				if(value2 < 50)
+					c.at<uchar>(h,w) = 0;
+				else
+					c.at<uchar>(h,w) = 255;
+		}
+	}
+	ShowWindow((const char *)"colorimge22", c,300, HEIGHT * 4);
+	for(int h =0;h< c.rows-1;h++)
+	{
+		for(int w=0;w<c.cols-1;w++)
+		{
+			if(c.at<uchar>(h,w) ==255 & c.at<uchar>(h+1,w) == 255 & c.at<uchar>(h,w+1) == 255)
+				c.at<uchar>(h,w) ==255;
+			else
+				c.at<uchar>(h,w) == 0;
+		}
+	}
+	subtract(a,c,c);
+	ShowWindow((const char *)"colorimge33", c,300, HEIGHT * 5);
+
+	for(int h =0;h< c.rows/10;h++)
+	{
+		for(int w=0;w<c.cols/10;w++)
+		{
+			int count =0;
+			for(int x =  h*10;x<h*10+10 ;x++)
+			{
+				for(int y = w*10;y < w*10+10;y++)
+				{
+					if(c.at<uchar>(x,y) ==255)
+						count++;
+				}
+			}
+			for(int x =  h*10;x<h*10+10 ;x++)
+			{
+				for(int y = w*10;y < w*10+10;y++)
+				{
+					if(count >25)
+						c.at<uchar>(x,y) = 255;
+					else
+						c.at<uchar>(x,y) = 0;
+				}
+			}
+		}
+	}
+	ShowWindow((const char *)"colorimge44", c,300, HEIGHT * 6);
+	//src_color.convertTo(src_color,-1,-1,255);
+	
+	//Sobel(src_color,a,CV_8U,1,0,3,1,0,BORDER_DEFAULT);
+	//Sobel(src_color,b,CV_8U,0,1,3,1,0,BORDER_DEFAULT);
+	//add(a,b,c);
+	//ShowWindow((const char *)"colorimge30", c,300, HEIGHT * 5);
+
 	Mat test1,test2,test3,test21;
 	src_gray.copyTo(test1);
 	src_gray.copyTo(test2);
 	src_gray.copyTo(test21);
 
 	medianBlur(test2,test2,3);
-	medianBlur(test21,test21,5);
+	//medianBlur(test21,test21,5);
 	add(test1,test2,test1);
-	add(test1,test21,test1);
+	//add(test1,test21,test1);
+	vector<vector<Point>> squares;
 	
 	//dilate(test1,test1,Mat(),Point(-1,-1),1);
     test1.copyTo(test3);
-	//add(test1,test3,test1);
+	//subtract(src_color,test3,test3);
 	//test1.convertTo(test1,-1,-1,255);
-	ShowWindow((const char *)"test", test1, 0, HEIGHT * 3);
+	ShowWindow((const char *)"test", test3, 0, HEIGHT * 3);
 	//threshold(test3,test3,125 ,255,THRESH_BINARY);
-	 ShowWindow((const char *)"corners2", test3,300, HEIGHT * 4);
-	vector<Point2f> corners;
-	goodFeaturesToTrack(test3,
-		corners,
-		110,
-		0.01,
-		5,
-		Mat(),
-		3,
-		true,
-		0.04);
-	
-	for(size_t i = 0;i<corners.size();i++)
-	{
-		circle(test3, corners[i],10,IcvprGetRandomColor(),-1,8,0);
-	}
-
-	ShowWindow((const char *)"corners", test3,300, HEIGHT * 5);
+	 //ShowWindow((const char *)"corners2", test3,300, HEIGHT * 4);
 
 	//test1.copyTo(src_gray);
     int histSize = 256;
@@ -205,7 +282,7 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
 	//dilate(test1,test1,Mat(),Point(-1,-1),10);
    
     ShowWindow((const char *)"dilate", test1, WIDTH * 1, HEIGHT * 2.5);
-	Canny(test1, dst, 0, T-29, 3);
+	Canny(test1, dst, 300, 255, 3);
     ShowWindow((const char *)"canny", dst, WIDTH * 1, HEIGHT * 2);
     vector<vector<Point>> contours;
     vector<Vec4i> hierarchy;

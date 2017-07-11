@@ -29,10 +29,10 @@ vector<ALRect> numeric;
 CvSVM svm;
 
 void IcvprCcaByTwoPass(const Mat& _binImg, Mat& _lableImg);
+void FindROI(const Mat& _srcImg,Mat& _roiImg);
 Scalar IcvprGetRandomColor();
 void IcvprLabelColor(const Mat& _labelImg, Mat& _colorLabelImg);
 bool SortLtx(const ALRect lhs,const ALRect rhs);
-bool SortLight(const ALRect lhs,const ALRect rhs);
 void drawHisImg(const Mat &src,Mat &dst);
 short SetNumericMax(int type);
 void ShowWindow(const char *title, Mat src, int x, int y);
@@ -58,70 +58,511 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
     cvtColor(src,src_gray,COLOR_BGR2GRAY);
     cvtColor(src,src_down,COLOR_BGR2GRAY);
     cvtColor(src,src_crop,COLOR_BGR2GRAY);
+	Mat a;
+	FindROI(src, a);
+	//add(a,c,c);
+
+	//for(int h =1;h< c.rows-1;h++)
+	//{
+	//	for(int w=0;w<c.cols-1;w++)
+	//	{
+	//		if(c.at<uchar>(h,w) ==255 & c.at<uchar>(h+1,w) == 255 & c.at<uchar>(h+1,w+1) == 255 & c.at<uchar>(h-1,w) == 255)
+	//			c.at<uchar>(h,w) ==255;
+	//		else
+	//			c.at<uchar>(h,w) == 0;
+	//	}
+	//}
+	//subtract(a,c,c);
+	//ShowWindow((const char *)"colorimge33", c,300, HEIGHT * 5);
+
+	//for(int h =0;h< c.rows/2;h++)
+	//{
+	//	for(int w=0;w<c.cols/10;w++)
+	//	{
+	//		int count =0;
+	//		for(int x =  h*2;x<h*2+2 ;x++)
+	//		{
+	//			for(int y = w*10;y < w*10+10;y++)
+	//			{
+	//				if(c.at<uchar>(x,y) ==255)
+	//					count++;
+	//			}
+	//		}
+	//		for(int x =  h*2;x<h*2+2 ;x++)
+	//		{
+	//			for(int y = w*10;y < w*10+10;y++)
+	//			{
+	//				if(count >10)
+	//					c.at<uchar>(x,y) = 0;
+	//				else
+	//					c.at<uchar>(x,y) = 255;
+	//			}
+	//		}
+	//	}
+	//}
+
+	//ShowWindow((const char *)"colorimge44", c,300, HEIGHT * 6);
+	//src_color.convertTo(src_color,-1,-1,255);
+	//
+	//Sobel(src_color,a,CV_8U,1,0,3,1,0,BORDER_DEFAULT);
+	//Sobel(src_color,b,CV_8U,0,1,3,1,0,BORDER_DEFAULT);
+	//add(a,b,c);
+	//ShowWindow((const char *)"colorimge30", c,300, HEIGHT * 5);
+
+	Mat test1,test2,test3,test21;
+	src_gray.copyTo(test1);
+	src_gray.copyTo(test2);
+	src_gray.copyTo(test21);
+
+	medianBlur(test2,test2,3);
+	//medianBlur(test21,test21,5);
+	add(test1,test2,test1);
+	//add(test1,test21,test1);
+	vector<vector<Point>> squares;
 	
-	Mat src_color,a,b,c;
-	src_gray.copyTo(src_color);
-	equalizeHist(src_color,src_color);
-	medianBlur(src_color,src_color,3);
-	//medianBlur(src_color,src_color,5);
-	ShowWindow((const char *)"1", src_color,300, HEIGHT * 1);
-	src_color.copyTo(a);
-	src_color.copyTo(b);
-	src_color.copyTo(c);
-	b.convertTo(b,-1,-1,255);
+	//dilate(test1,test1,Mat(),Point(-1,-1),1);
+    test1.copyTo(test3);
+	//subtract(src_color,test3,test3);
+	//test1.convertTo(test1,-1,-1,255);
+	ShowWindow((const char *)"test", test3, 0, HEIGHT * 3);
+	//threshold(test3,test3,125 ,255,THRESH_BINARY);
+	 //ShowWindow((const char *)"corners2", test3,300, HEIGHT * 4);
+
+	//test1.copyTo(src_gray);
+    int histSize = 256;
+    float rang[] = {0,255};
+    const float* histRange = {rang};
+    Mat histImg;
+    calcHist(&src_gray,1,0,Mat(),histImg,1,&histSize,&histRange);
+    Mat showHistImg(256,256,CV_8UC1,Scalar(255));
+    drawHistImg(histImg,showHistImg);
+    ShowWindow((const char *)"srcHistimg", showHistImg, 0, HEIGHT * 1.5);
+
+    while(true)
+    {
+        int piexl[3] = {0};
+        for(int i =0;i<src_gray.rows;i++)
+        {
+            for(int j = 0;j< src_gray.cols;j++)
+            {
+                if(src_gray.at<uchar>(i,j) < 120 ){
+                    piexl[0] ++;}
+                else if(src_gray.at<uchar>(i,j) <= 230){
+                    piexl[1] ++;}
+                else {
+                    piexl[2] ++;}
+            }
+        }
+        if(piexl[0] > (piexl[1]+(src_gray.rows *  src_gray.cols) / 6) && piexl[0] > piexl[2]){
+            src_gray.convertTo(src_gray,-1,1,15);
+            light -=15;
+        }
+        else if(piexl[2] > (piexl[1]+(src_gray.rows *  src_gray.cols) / 6) && piexl[2] > piexl[0]){
+            src_gray.convertTo(src_gray,-1,1,-15);
+            light +=15;
+        }
+        else
+            break;
+    }
+    calcHist(&src_gray,1,0,Mat(),histImg,1,&histSize,&histRange);
+    showHistImg = Mat(256,256,CV_8UC1,Scalar(255));
+    drawHistImg(histImg,showHistImg);
+    ShowWindow((const char *)"srcHistimg2", showHistImg, 0, HEIGHT * 3);
+
+	//Mat test ;
+    //adaptiveThreshold(src_gray, test, 255, ADAPTIVE_THRESH_MEAN_C, THRESH_BINARY,85, 0);
+    //medianBlur(test,test,3);
+	//dilate(test4,test4,Mat(),Point(-1,-1),1);
+	//ShowWindow((const char *)"adaptiveThreshold", test, 0, 0);
+    ShowWindow((const char *)"Grayimage", src_gray, 0, 0);
+ //   src_gray = test4;
+	//src_down = test4;
+    dilate(src_gray,src_gray,Mat(),Point(-1,-1),1);
+    ShowWindow((const char *)"Grayimage", src_gray, 0, 0);
+    
+    int T =0;
+    double Tmax;
+    double Tmin;;
+    minMaxIdx(src_gray,&Tmin,&Tmax);
+    T = ( Tmax + Tmin ) / 2;
+    printf("Brightness MIN, MAX: %f, %f\n", Tmin, Tmax);
+    
+    while(true)
+    {
+        
+        int Tosum =0,Tusum =0;
+        int on = 0,un =0;
+        for(int i = 0;i<src_gray.rows;i++)
+        {
+            for(int j = 0 ;j <src_gray.cols; j++)
+            {
+                if(src_gray.at<uchar>(i,j) >= T )
+                {
+                    Tosum += src_gray.at<uchar>(i,j);
+                    on ++;
+                }
+                else
+                {
+                    Tusum += src_gray.at<uchar>(i,j);
+                    un ++;
+                }
+            }
+        }
+        if(on != 0)
+        {
+            Tosum /=on;
+        }
+        else
+        {
+            Tosum = 0;
+        }
+        if(un != 0)
+        {
+            Tusum /=un;
+        }
+        else
+        {
+            Tusum = 0;
+        }
+        
+        if((Tosum+Tusum) /2  != T)
+            T = (Tosum+Tusum) /2;
+        else
+            break;
+    }
+    
+    cout << "T : " << T << endl;
+
+    //imshow("adaptiv",test);
+    //threshold(src_down,src_down,0,255,THRESH_BINARY);
+   //erode(test1,test1,Mat(),Point(-1,-1),40);
+	//dilate(test1,test1,Mat(),Point(-1,-1),10);
+   
+    ShowWindow((const char *)"dilate", test1, WIDTH * 1, HEIGHT * 2.5);
+	Canny(test1, dst, 300, 255, 3);
+    ShowWindow((const char *)"canny", dst, WIDTH * 1, HEIGHT * 2);
+    vector<vector<Point>> contours;
+    vector<Vec4i> hierarchy;
+    RNG rng(12345);
+    findContours(dst, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
+    
+    map<int, ALRect> ROIRects;
+    Mat imageROI;
+    
+    for(int i = 0; i<contours.size(); i++){
+        for(int j = 0; j < contours[i].size(); j++) {
+            int x = contours[i][j].x;
+            int y = contours[i][j].y;
+            if(j > 0) {
+                if(ROIRects[i]._ltx > x)
+                    ROIRects[i].SetLtx(x);
+                if(ROIRects[i]._lty > y)
+                    ROIRects[i].SetLty(y);
+                if(ROIRects[i]._rdx < x)
+                    ROIRects[i].SetRdx(x);
+                if(ROIRects[i]._rdy < y)
+                    ROIRects[i].SetRdy(y);
+                ROIRects[i].AddCount(1);
+            } else {
+                ROIRects[i] = ALRect(x, y, 1, 1, 1);
+            }
+        }
+        int x = ROIRects[i]._ltx;
+        int y = ROIRects[i]._lty;
+        int width = ROIRects[i]._width;
+        int height = ROIRects[i]._height;
+        int count = ROIRects[i]._count;
+        float ratio = (float)width / (float)height;
+        int cy = HEIGHT / 2;
+        bool isShow =  y <= cy && y + height >= cy && width > 150 && width < 200 ? true : false;
+        if(isShow) {
+            cout << "ROIRects ltx, lty, width, height, count, ratio : " << ROIRects[i]._ltx << ", " << ROIRects[i]._lty << ", " << ROIRects[i]._width << ", " << ROIRects[i]._height << ", " << ROIRects[i]._count << ", " << ratio << endl;
+            
+            Scalar color = Scalar( rng.uniform(0, 255), rng.uniform(0, 255), 255);
+            drawContours(dst, contours, i, color, 2, 8, hierarchy);
+            //方法一
+            imageROI=src_gray(Rect(x,y,width,height));
+            ShowWindow((const char *)"imageROI", imageROI, WIDTH * 1, HEIGHT * 4);
+        }
+    }
+    if (imageROI.empty()) imageROI=src_gray(Rect(0,0,WIDTH,HEIGHT));
+    
+    
+    minMaxIdx(imageROI,&Tmin,&Tmax);
+    T = ( Tmax + Tmin ) / 2;
+    printf("Brightness2 MIN, MAX: %f, %f\n", Tmin, Tmax);
+    
+    while(true)
+    {
+        
+        int Tosum =0,Tusum =0;
+        int on = 0,un =0;
+        for(int i = 0;i<imageROI.rows;i++)
+        {
+            for(int j = 0 ;j <imageROI.cols; j++)
+            {
+                if(imageROI.at<uchar>(i,j) >= T )
+                {
+                    Tosum += imageROI.at<uchar>(i,j);
+                    on ++;
+                }
+                else
+                {
+                    Tusum += imageROI.at<uchar>(i,j);
+                    un ++;
+                }
+            }
+        }
+        if(on != 0)
+        {
+            Tosum /=on;
+        }
+        else
+        {
+            Tosum = 0;
+        }
+        if(un != 0)
+        {
+            Tusum /=un;
+        }
+        else
+        {
+            Tusum = 0;
+        }
+        
+        if((Tosum+Tusum) /2  != T)
+            T = (Tosum+Tusum) /2;
+        else
+            break;
+    }
+    
+    cout << "T2 : " << T << endl;
+
+	int makeup = -29;
+    threshold(src_gray,dst,T + makeup,255,THRESH_BINARY);
+	threshold(src_gray,thres,T + makeup,1,THRESH_BINARY);
+    threshold(src_down,src_down,T + makeup,255,THRESH_BINARY);    
+    ShowWindow((const char *)"ALthreshold", dst, WIDTH * 2, 0);
+    ShowWindow((const char *)"src_down", thres, WIDTH * 1, 0);
+    component.clear();
+    Mat labelImg ;
+    IcvprCcaByTwoPass(thres, labelImg) ;
+    
+    // show result
+    Mat grayImg ;
+    labelImg *= 10 ;
+    labelImg.convertTo(grayImg, CV_8UC1) ;
+    ShowWindow((const char *)"labelImg", grayImg, WIDTH * 2, HEIGHT * 2);
+    
+    /*CvSVM svm;
+     svm.load("D:\\OCR\\digital-recognize\\demon\\gas.xml");*/
+    Mat trainTempImg= Mat(Size(28,28),8,3);    
+    trainTempImg.setTo(Scalar::all(0));
+    int counts = 0;
+    map<int, ALRect>::iterator iter;
+    int ROILX = 0;
+    int ROIRX = WIDTH;
+    for(iter = component.begin(); iter != component.end(); iter++) {
+        int x = iter->second._ltx;
+        int y = iter->second._lty;
+        int width = iter->second._width;
+        int height = iter->second._height;
+        int count = iter->second._count;
+        if(width > WIDTH / 2) {
+            ROILX = x;
+            ROIRX = x + width;
+            break;
+        }
+    }
+    printf("ROI X RANGE : %d, %d\n", ROILX, ROIRX);
+    
+    for(iter = component.begin(); iter != component.end(); iter++) {
+        int x = iter->second._ltx;
+        int y = iter->second._lty;
+        int width = iter->second._width;
+        int height = iter->second._height;
+        int count = iter->second._count;
+        int cy = HEIGHT / 2;
+        bool isShow =  y <= cy && y + height >= cy && count >= 36 && count <= 760 && height >=14 && height < 45 && width >= 4 && width < 45 && x > ROILX && x + width < ROIRX ? true : false;
+        char title[1000] ;
+        if(isShow) {
+            numeric.push_back(iter->second);
+            sprintf(title, "component : %d", iter->first);
+            cout << "component ltx, lty, width, height, count : " << iter->second._ltx << ", " << iter->second._lty << ", " << iter->second._width << ", " << iter->second._height << ", " << iter->second._count << endl;
+            Mat roi = src_down( Rect(iter->second._ltx,iter->second._lty,iter->second._width,iter->second._height) );
+			ShowWindow(title, roi, WIDTH * 4, 0 + roi.rows * ((counts++) * 3));
+        }
+    }
+    
+    //
+    sort(numeric.begin(),numeric.end(),SortLtx);
+    
+    for(int i=0; i<numeric.size(); i++) {
+        char title[1000] ;
+        cout << "numeric ltx, lty, width, height, count : " << numeric[i]._ltx << ", " << numeric[i]._lty << ", " << numeric[i]._width << ", " << numeric[i]._height << ", " << numeric[i]._count << endl;
+        sprintf(title, "numeric : %d", i);
+        Mat roi = src_down( Rect(numeric[i]._ltx,numeric[i]._lty,numeric[i]._width,numeric[i]._height) );
+        resize(roi,trainTempImg,Size(48,48));
+        Mat trainRoi = Mat(48,48,CV_8U, Scalar(0));
+        int x = (trainRoi.rows /2)-( numeric[i]._width/2);
+        int y = (trainRoi.cols /2)-( numeric[i]._height/2);
+        Mat roi2 = trainRoi(Rect(x,y,roi.cols,roi.rows));
+        addWeighted(roi2,0,roi,1,0,roi2);
+        
+#ifdef SHOWWINDOW
+
+        getcwd(title, 1000);
+        GetCurrentDir(title, 1000);
+        sprintf(title, "%s/train/tmp/%d_%d.bmp", title, type, rand());
+        ShowWindow(title, trainRoi, WIDTH * 1.5, 0 + trainRoi.rows * ((i) * 2 ));
+        imwrite(title, trainRoi);
+#endif
+        
+        HOGDescriptor *hog= new HOGDescriptor (cvSize(48,48),cvSize(24,24),cvSize(12,12),cvSize(6,6),9);
+        vector<float> descriptors;
+        hog->compute(trainRoi,descriptors,Size(1,1),Size(0,0));
+        printf("Hog dims: %d \n",descriptors.size());
+        CvMat* SVMtrainMat = cvCreateMat(1,descriptors.size(),CV_32FC1);
+        int n =0;
+        for(vector<float>::iterator iter=descriptors.begin();iter!=descriptors.end();iter++)
+        {
+            cvmSet(SVMtrainMat,0,n,*iter);
+            n++;
+        }
+        int ret = svm.predict(SVMtrainMat);
+        
+        result[i + 1] = ret + 48;
+        
+        if(i + 1 == numericMax) {
+            result[0] = 0;
+            break;
+        }
+    }
+    //
+    
+    Mat colorLabelImg ;
+    IcvprLabelColor(labelImg, colorLabelImg) ;
+    ShowWindow((const char *)"colorImg", colorLabelImg, WIDTH * 2, 0 + HEIGHT * 4);
+    
+    printf("result: %c, %c, %c, %c, %c, %d \n", result[1], result[2], result[3], result[4], result[5], result[6]);
+    
+    
+    return result;
+};
+void FindROI(const Mat& _srcImg,Mat& _roiImg)
+{
+	if (_srcImg.empty() ||
+          _srcImg.type() != CV_8UC3)
+    {
+        return ;
+    }
+	Mat src_gray,src_label,src_color,showImg1,showImg2;
+	_srcImg.copyTo(src_gray);
+	cvtColor(src_gray,src_gray,COLOR_BGR2GRAY);
+	equalizeHist(src_gray,src_gray);
+	medianBlur(src_gray,src_gray,3);
+	medianBlur(src_gray,src_gray,5);
+	//src_gray.convertTo(src_gray,-1,-1,255);
 	int value1=0,value2=0;
-	value1=0,value2=0;
-	for(int h =0;h< b.rows-2;h++)
+	for(int h =0;h< src_gray.rows-2;h++)
 	{
-		for(int w=0;w<b.cols;w++)
+		for(int w=0;w<src_gray.cols;w++)
 		{
-			value1 = b.at<uchar>(h+2,w) - b.at<uchar>(h,w);
-			value2 = b.at<uchar>(h,w) - b.at<uchar>(h+2,w);
+			value1 = src_gray.at<uchar>(h+2,w) - src_gray.at<uchar>(h,w);
+			value2 = src_gray.at<uchar>(h,w) - src_gray.at<uchar>(h+2,w);
 			if(value1 > value2)
-				if(value1 < 50)
-					a.at<uchar>(h,w) =0;
+				if(value1 < 15)
+					src_gray.at<uchar>(h,w) =0;
 				else
-					a.at<uchar>(h,w) = 255;
+					src_gray.at<uchar>(h,w) = 255;
 			else
-				if(value2 < 50)
-					a.at<uchar>(h,w) = 0;
+				if(value2 < 15)
+					src_gray.at<uchar>(h,w) = 0;
 				else
-					a.at<uchar>(h,w) = 255;
+					src_gray.at<uchar>(h,w) = 255;
 		}
 	}
-	ShowWindow((const char *)"colorimge22", a,300, HEIGHT * 4);
-	Mat labelImg1 ;
-	threshold(a,a,125,1,THRESH_BINARY);
-	dilate(a,a,Mat(),Point(-1,-1),2);
-	erode(a,a,Mat(),Point(-1,-1),2);
-    IcvprCcaByTwoPass(a, labelImg1) ;
-    //ShowWindow((const char *)"labbbbbbb", labelImg1, 1000, HEIGHT * 4);
-    // show result
-    Mat grayImg1 ;
-    IcvprLabelColor(labelImg1,grayImg1) ;
-    Mat testimgabc;
-	grayImg1.copyTo(testimgabc);
-	//testimgabc.convertTo(testimgabc, CV_8UC1) ;
-	cvtColor(testimgabc,testimgabc,COLOR_BGR2GRAY);
-	ShowWindow((const char *)"labelImgaaaa", grayImg1, 1000, HEIGHT * 2);
-	map<int, ALRect>::iterator iter1;
-	vector<ALRect> numeric1;
-	int counts1 =0;
+	ShowWindow((const char *)"src_gray", src_gray,300, HEIGHT * 2);
 	
-	for(iter1 = component.begin(); iter1 != component.end(); iter1++) {
-        int x = iter1->second._ltx;
-        int y = iter1->second._lty;
-        int width = iter1->second._width;
-        int height = iter1->second._height;
-        int count = iter1->second._count;
+	threshold(src_gray,src_gray,125,1,THRESH_BINARY);
+	dilate(src_gray,src_gray,Mat(),Point(-1,-1),1);
+	erode(src_gray,src_gray,Mat(),Point(-1,-1),1);
+	component.clear();
+    IcvprCcaByTwoPass(src_gray, src_label) ;
+    ShowWindow((const char *)"src_label", src_label, 1000, HEIGHT * 4);
+
+    IcvprLabelColor(src_label,src_color) ;
+
+	src_color.copyTo(showImg1);
+	src_color.copyTo(showImg2);
+	cvtColor(showImg1,showImg1,COLOR_BGR2GRAY);
+	cvtColor(showImg2,showImg2,COLOR_BGR2GRAY);
+	threshold(showImg2,showImg2,0,255,THRESH_BINARY);
+	ShowWindow((const char *)"showImg1", showImg1, 1000, HEIGHT * 2);	
+	map<int, ALRect>::iterator iter;
+	vector<ALRect> roiic;
+	int counts1 =0;	
+	for(iter = component.begin(); iter != component.end(); iter++) {
+        int x = iter->second._ltx;
+        int y = iter->second._lty;
+        int width = iter->second._width;
+        int height = iter->second._height;
+        int count = iter->second._count;
         int cy = HEIGHT / 2;
 		int cx = WIDTH / 4;
         bool isShow =   count >= 80 &&  width > 80 && x < 100 && counts1 < 2? true : false;
         char title[1000] ;
         if(isShow) {
-            numeric1.push_back(iter1->second);
-            sprintf(title, "component : %d", iter1->first);
-            cout << "component ltx, lty, width, height, count : " << iter1->second._ltx << ", " << iter1->second._lty << ", " << iter1->second._width << ", " << iter1->second._height << ", " << iter1->second._count << endl;
+			int newheight = height;
+			int newy = y;
+			int piexnumbermax = 0;
+			cout << "oldcomponent ltx, lty, width, height, count : " << iter->second._ltx << ", " << iter->second._lty << ", " << iter->second._width << ", " << iter->second._height << ", " << iter->second._count << endl;
+			for(int i =y;i < y + height;i++)
+			{
+				int piexnumber=0;
+				for(int j = x;j< x + width;j++)
+				{
+					if(showImg2.at<uchar>(i,j) == 255)
+						piexnumber++; 
+				}
+				if(piexnumber < (width/3))
+				{
+					newheight--;
+					for(int j = x;j< x + width;j++)
+					{
+						showImg2.at<uchar>(i,j) = 0;
+					}
+				}
+				else if(piexnumber > (width /2) && piexnumbermax < piexnumber)
+				{
+					if(y + height < HEIGHT/2) //topLine
+					{
+						if(i > newy)
+						{
+							newy = i;
+						}
+					}
+					else //bottomLine
+					{
+						if( y > HEIGHT/2)
+						{
+							if( i > newy)
+								newy = i;
+						}
+						else
+						{
+							newy = i;
+						}
+					}
+					
+							piexnumbermax = piexnumber;
+				}
+			}
+			iter->second.SetLty(newy);
+			iter->second._height = newheight;
+            roiic.push_back(iter->second);
+            sprintf(title, "component : %d", iter->first);
+            cout << "newcomponent ltx, lty, width, height, count : " << iter->second._ltx << ", " << iter->second._lty << ", " << iter->second._width << ", " << iter->second._height << ", " << iter->second._count << endl;
         }
 		else
 		{
@@ -129,437 +570,52 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
 			{
 				for(int j = x; j < x +width;j++)
 				{
-					testimgabc.at<uchar>(i,j) = 0;
+					showImg1.at<uchar>(i,j) = 0;
+					showImg2.at<uchar>(i,j) = 0;
 				}
 			}
 		}
     }
-	ShowWindow((const char *)"labbbbbbb", testimgabc, 1000, HEIGHT * 4);
-	//sort(numeric1.begin(),numeric1.end(),SortLight);
+	ShowWindow((const char *)"showImg1", showImg1, 300, HEIGHT * 4);
+	ShowWindow((const char *)"showImg2", showImg2,300, HEIGHT * 6);
+
 	int roitopy = 0,roibottomy= HEIGHT,roitopindex =0,roibottomindex =0;
-	for(int i = 0;i < numeric1.size();i++)
+	for(int i = 0;i < roiic.size();i++)
 	{
-		if(numeric1[i]._lty < HEIGHT/2 && roitopy < numeric1[i]._lty)
+		if(roiic[i]._lty < HEIGHT/2 && roitopy < roiic[i]._lty)
 		{
-			roitopy = numeric1[i]._lty;
+			roitopy = roiic[i]._lty;
 			roitopindex = i;
 		}
-		else if(numeric1[i]._lty > HEIGHT/2 && roibottomy > numeric1[i]._lty)
+		else if(roiic[i]._lty > HEIGHT/2 && roibottomy > roiic[i]._lty)
 		{
-			roibottomy = numeric1[i]._lty;
+			roibottomy = roiic[i]._lty;
 			roibottomindex = i;
 		}
 	}
-	if(numeric1.size() >=2)
+    Mat roi;
+	if(roiic.size() >=2)
 	{
-		int x = numeric1[roitopindex]._ltx;
-		int y = numeric1[roitopindex]._lty;
-		int height =  numeric1[roibottomindex]._lty - y ;
-		int width = 0;
-		if(numeric1[roitopindex]._width > numeric1[roibottomindex]._width)
-			width = numeric1[roitopindex]._width;
+		int x = roiic[roitopindex]._ltx;
+		int y = roiic[roitopindex]._lty;
+		int height =  roiic[roibottomindex]._lty - y ;
+		int width = roiic[roitopindex]._width;
+		if(width > roiic[roibottomindex]._width)
+		{
+			if(width >  WIDTH/2)
+				width = (roiic[roitopindex]._width + roiic[roibottomindex]._width)/2;
+		}
 		else
-			width = numeric1[roibottomindex]._width;
-		
-		Mat roi = src( Rect(x,y,width,height) );
-			ShowWindow((const char *)"e22", roi,300, HEIGHT * 2);
-	}
-
-
-
-	
-	//add(a,c,c);
-
-	for(int h =1;h< c.rows-1;h++)
-	{
-		for(int w=0;w<c.cols-1;w++)
 		{
-			if(c.at<uchar>(h,w) ==255 & c.at<uchar>(h+1,w) == 255 & c.at<uchar>(h+1,w+1) == 255 & c.at<uchar>(h-1,w) == 255)
-				c.at<uchar>(h,w) ==255;
+			if(roiic[roibottomindex]._width >  WIDTH/2)
+				width = (roiic[roitopindex]._width + roiic[roibottomindex]._width)/2;
 			else
-				c.at<uchar>(h,w) == 0;
+				width = roiic[roibottomindex]._width;
 		}
+		cout << "component ltx, lty, width, height : " << x << ", " << y << ", " << width << ", " << height  << endl;
+		_roiImg = _srcImg( Rect(x,y,width,height) );
+		ShowWindow((const char *)"src_roi", _roiImg,300, HEIGHT * 2);
 	}
-	//subtract(a,c,c);
-	ShowWindow((const char *)"colorimge33", c,300, HEIGHT * 5);
-
-	for(int h =0;h< c.rows/2;h++)
-	{
-		for(int w=0;w<c.cols/10;w++)
-		{
-			int count =0;
-			for(int x =  h*2;x<h*2+2 ;x++)
-			{
-				for(int y = w*10;y < w*10+10;y++)
-				{
-					if(c.at<uchar>(x,y) ==255)
-						count++;
-				}
-			}
-			for(int x =  h*2;x<h*2+2 ;x++)
-			{
-				for(int y = w*10;y < w*10+10;y++)
-				{
-					if(count >10)
-						c.at<uchar>(x,y) = 0;
-					else
-						c.at<uchar>(x,y) = 255;
-				}
-			}
-		}
-	}
-
-	ShowWindow((const char *)"colorimge44", c,300, HEIGHT * 6);
-	src_color.convertTo(src_color,-1,-1,255);
-	//
-	//Sobel(src_color,a,CV_8U,1,0,3,1,0,BORDER_DEFAULT);
-	//Sobel(src_color,b,CV_8U,0,1,3,1,0,BORDER_DEFAULT);
-	//add(a,b,c);
-	//ShowWindow((const char *)"colorimge30", c,300, HEIGHT * 5);
-
-//	Mat test1,test2,test3,test21;
-//	src_gray.copyTo(test1);
-//	src_gray.copyTo(test2);
-//	src_gray.copyTo(test21);
-//
-//	medianBlur(test2,test2,3);
-//	//medianBlur(test21,test21,5);
-//	add(test1,test2,test1);
-//	//add(test1,test21,test1);
-//	vector<vector<Point>> squares;
-//	
-//	//dilate(test1,test1,Mat(),Point(-1,-1),1);
-//    test1.copyTo(test3);
-//	//subtract(src_color,test3,test3);
-//	//test1.convertTo(test1,-1,-1,255);
-//	ShowWindow((const char *)"test", test3, 0, HEIGHT * 3);
-//	//threshold(test3,test3,125 ,255,THRESH_BINARY);
-//	 //ShowWindow((const char *)"corners2", test3,300, HEIGHT * 4);
-//
-//	//test1.copyTo(src_gray);
-//    int histSize = 256;
-//    float rang[] = {0,255};
-//    const float* histRange = {rang};
-//    Mat histImg;
-//    calcHist(&src_gray,1,0,Mat(),histImg,1,&histSize,&histRange);
-//    Mat showHistImg(256,256,CV_8UC1,Scalar(255));
-//    drawHistImg(histImg,showHistImg);
-//    ShowWindow((const char *)"srcHistimg", showHistImg, 0, HEIGHT * 1.5);
-//
-//    while(true)
-//    {
-//        int piexl[3] = {0};
-//        for(int i =0;i<src_gray.rows;i++)
-//        {
-//            for(int j = 0;j< src_gray.cols;j++)
-//            {
-//                if(src_gray.at<uchar>(i,j) < 120 ){
-//                    piexl[0] ++;}
-//                else if(src_gray.at<uchar>(i,j) <= 230){
-//                    piexl[1] ++;}
-//                else {
-//                    piexl[2] ++;}
-//            }
-//        }
-//        if(piexl[0] > (piexl[1]+(src_gray.rows *  src_gray.cols) / 6) && piexl[0] > piexl[2]){
-//            src_gray.convertTo(src_gray,-1,1,15);
-//            light -=15;
-//        }
-//        else if(piexl[2] > (piexl[1]+(src_gray.rows *  src_gray.cols) / 6) && piexl[2] > piexl[0]){
-//            src_gray.convertTo(src_gray,-1,1,-15);
-//            light +=15;
-//        }
-//        else
-//            break;
-//    }
-//    calcHist(&src_gray,1,0,Mat(),histImg,1,&histSize,&histRange);
-//    showHistImg = Mat(256,256,CV_8UC1,Scalar(255));
-//    drawHistImg(histImg,showHistImg);
-//    ShowWindow((const char *)"srcHistimg2", showHistImg, 0, HEIGHT * 3);
-//
-//	//Mat test ;
-//    //adaptiveThreshold(src_gray, test, 255, ADAPTIVE_THRESH_MEAN_C, THRESH_BINARY,85, 0);
-//    //medianBlur(test,test,3);
-//	//dilate(test4,test4,Mat(),Point(-1,-1),1);
-//	//ShowWindow((const char *)"adaptiveThreshold", test, 0, 0);
-//    ShowWindow((const char *)"Grayimage", src_gray, 0, 0);
-// //   src_gray = test4;
-//	//src_down = test4;
-//    dilate(src_gray,src_gray,Mat(),Point(-1,-1),1);
-//    ShowWindow((const char *)"Grayimage", src_gray, 0, 0);
-//    
-//    int T =0;
-//    double Tmax;
-//    double Tmin;;
-//    minMaxIdx(src_gray,&Tmin,&Tmax);
-//    T = ( Tmax + Tmin ) / 2;
-//    printf("Brightness MIN, MAX: %f, %f\n", Tmin, Tmax);
-//    
-//    while(true)
-//    {
-//        
-//        int Tosum =0,Tusum =0;
-//        int on = 0,un =0;
-//        for(int i = 0;i<src_gray.rows;i++)
-//        {
-//            for(int j = 0 ;j <src_gray.cols; j++)
-//            {
-//                if(src_gray.at<uchar>(i,j) >= T )
-//                {
-//                    Tosum += src_gray.at<uchar>(i,j);
-//                    on ++;
-//                }
-//                else
-//                {
-//                    Tusum += src_gray.at<uchar>(i,j);
-//                    un ++;
-//                }
-//            }
-//        }
-//        if(on != 0)
-//        {
-//            Tosum /=on;
-//        }
-//        else
-//        {
-//            Tosum = 0;
-//        }
-//        if(un != 0)
-//        {
-//            Tusum /=un;
-//        }
-//        else
-//        {
-//            Tusum = 0;
-//        }
-//        
-//        if((Tosum+Tusum) /2  != T)
-//            T = (Tosum+Tusum) /2;
-//        else
-//            break;
-//    }
-//    
-//    cout << "T : " << T << endl;
-//
-//    //imshow("adaptiv",test);
-//    //threshold(src_down,src_down,0,255,THRESH_BINARY);
-//   //erode(test1,test1,Mat(),Point(-1,-1),40);
-//	//dilate(test1,test1,Mat(),Point(-1,-1),10);
-//   
-//    ShowWindow((const char *)"dilate", test1, WIDTH * 1, HEIGHT * 2.5);
-//	Canny(test1, dst, 300, 255, 3);
-//    ShowWindow((const char *)"canny", dst, WIDTH * 1, HEIGHT * 2);
-//    vector<vector<Point>> contours;
-//    vector<Vec4i> hierarchy;
-//    RNG rng(12345);
-//    findContours(dst, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
-//    
-//    map<int, ALRect> ROIRects;
-//    Mat imageROI;
-//    
-//    for(int i = 0; i<contours.size(); i++){
-//        for(int j = 0; j < contours[i].size(); j++) {
-//            int x = contours[i][j].x;
-//            int y = contours[i][j].y;
-//            if(j > 0) {
-//                if(ROIRects[i]._ltx > x)
-//                    ROIRects[i].SetLtx(x);
-//                if(ROIRects[i]._lty > y)
-//                    ROIRects[i].SetLty(y);
-//                if(ROIRects[i]._rdx < x)
-//                    ROIRects[i].SetRdx(x);
-//                if(ROIRects[i]._rdy < y)
-//                    ROIRects[i].SetRdy(y);
-//                ROIRects[i].AddCount(1);
-//            } else {
-//                ROIRects[i] = ALRect(x, y, 1, 1, 1);
-//            }
-//        }
-//        int x = ROIRects[i]._ltx;
-//        int y = ROIRects[i]._lty;
-//        int width = ROIRects[i]._width;
-//        int height = ROIRects[i]._height;
-//        int count = ROIRects[i]._count;
-//        float ratio = (float)width / (float)height;
-//        int cy = HEIGHT / 2;
-//        bool isShow =  y <= cy && y + height >= cy && width > 150 && width < 200 ? true : false;
-//        if(isShow) {
-//            cout << "ROIRects ltx, lty, width, height, count, ratio : " << ROIRects[i]._ltx << ", " << ROIRects[i]._lty << ", " << ROIRects[i]._width << ", " << ROIRects[i]._height << ", " << ROIRects[i]._count << ", " << ratio << endl;
-//            
-//            Scalar color = Scalar( rng.uniform(0, 255), rng.uniform(0, 255), 255);
-//            drawContours(dst, contours, i, color, 2, 8, hierarchy);
-//            //方法一
-//            imageROI=src_gray(Rect(x,y,width,height));
-//            ShowWindow((const char *)"imageROI", imageROI, WIDTH * 1, HEIGHT * 4);
-//        }
-//    }
-//    if (imageROI.empty()) imageROI=src_gray(Rect(0,0,WIDTH,HEIGHT));
-//    
-//    
-//    minMaxIdx(imageROI,&Tmin,&Tmax);
-//    T = ( Tmax + Tmin ) / 2;
-//    printf("Brightness2 MIN, MAX: %f, %f\n", Tmin, Tmax);
-//    
-//    while(true)
-//    {
-//        
-//        int Tosum =0,Tusum =0;
-//        int on = 0,un =0;
-//        for(int i = 0;i<imageROI.rows;i++)
-//        {
-//            for(int j = 0 ;j <imageROI.cols; j++)
-//            {
-//                if(imageROI.at<uchar>(i,j) >= T )
-//                {
-//                    Tosum += imageROI.at<uchar>(i,j);
-//                    on ++;
-//                }
-//                else
-//                {
-//                    Tusum += imageROI.at<uchar>(i,j);
-//                    un ++;
-//                }
-//            }
-//        }
-//        if(on != 0)
-//        {
-//            Tosum /=on;
-//        }
-//        else
-//        {
-//            Tosum = 0;
-//        }
-//        if(un != 0)
-//        {
-//            Tusum /=un;
-//        }
-//        else
-//        {
-//            Tusum = 0;
-//        }
-//        
-//        if((Tosum+Tusum) /2  != T)
-//            T = (Tosum+Tusum) /2;
-//        else
-//            break;
-//    }
-//    
-//    cout << "T2 : " << T << endl;
-//
-//	int makeup = -29;
-//    threshold(src_gray,dst,T + makeup,255,THRESH_BINARY);
-//	threshold(src_gray,thres,T + makeup,1,THRESH_BINARY);
-//    threshold(src_down,src_down,T + makeup,255,THRESH_BINARY);    
-//    ShowWindow((const char *)"ALthreshold", dst, WIDTH * 2, 0);
-//    ShowWindow((const char *)"src_down", thres, WIDTH * 1, 0);
-//    component.clear();
-//    Mat labelImg ;
-//    IcvprCcaByTwoPass(thres, labelImg) ;
-//    
-//    // show result
-//    Mat grayImg ;
-//    labelImg *= 10 ;
-//    labelImg.convertTo(grayImg, CV_8UC1) ;
-//    ShowWindow((const char *)"labelImg", grayImg, WIDTH * 2, HEIGHT * 2);
-//    
-//    /*CvSVM svm;
-//     svm.load("D:\\OCR\\digital-recognize\\demon\\gas.xml");*/
-//    Mat trainTempImg= Mat(Size(28,28),8,3);    
-//    trainTempImg.setTo(Scalar::all(0));
-//    int counts = 0;
-//    map<int, ALRect>::iterator iter;
-//    int ROILX = 0;
-//    int ROIRX = WIDTH;
-//    for(iter = component.begin(); iter != component.end(); iter++) {
-//        int x = iter->second._ltx;
-//        int y = iter->second._lty;
-//        int width = iter->second._width;
-//        int height = iter->second._height;
-//        int count = iter->second._count;
-//        if(width > WIDTH / 2) {
-//            ROILX = x;
-//            ROIRX = x + width;
-//            break;
-//        }
-//    }
-//    printf("ROI X RANGE : %d, %d\n", ROILX, ROIRX);
-//    
-//    for(iter = component.begin(); iter != component.end(); iter++) {
-//        int x = iter->second._ltx;
-//        int y = iter->second._lty;
-//        int width = iter->second._width;
-//        int height = iter->second._height;
-//        int count = iter->second._count;
-//        int cy = HEIGHT / 2;
-//        bool isShow =  y <= cy && y + height >= cy && count >= 36 && count <= 760 && height >=14 && height < 45 && width >= 4 && width < 45 && x > ROILX && x + width < ROIRX ? true : false;
-//        char title[1000] ;
-//        if(isShow) {
-//            numeric.push_back(iter->second);
-//            sprintf(title, "component : %d", iter->first);
-//            cout << "component ltx, lty, width, height, count : " << iter->second._ltx << ", " << iter->second._lty << ", " << iter->second._width << ", " << iter->second._height << ", " << iter->second._count << endl;
-//            Mat roi = src_down( Rect(iter->second._ltx,iter->second._lty,iter->second._width,iter->second._height) );
-//			ShowWindow(title, roi, WIDTH * 4, 0 + roi.rows * ((counts++) * 3));
-//        }
-//    }
-//    
-//    //
-//    sort(numeric.begin(),numeric.end(),SortLtx);
-//    
-//    for(int i=0; i<numeric.size(); i++) {
-//        char title[1000] ;
-//        cout << "numeric ltx, lty, width, height, count : " << numeric[i]._ltx << ", " << numeric[i]._lty << ", " << numeric[i]._width << ", " << numeric[i]._height << ", " << numeric[i]._count << endl;
-//        sprintf(title, "numeric : %d", i);
-//        Mat roi = src_down( Rect(numeric[i]._ltx,numeric[i]._lty,numeric[i]._width,numeric[i]._height) );
-//        resize(roi,trainTempImg,Size(48,48));
-//        Mat trainRoi = Mat(48,48,CV_8U, Scalar(0));
-//        int x = (trainRoi.rows /2)-( numeric[i]._width/2);
-//        int y = (trainRoi.cols /2)-( numeric[i]._height/2);
-//        Mat roi2 = trainRoi(Rect(x,y,roi.cols,roi.rows));
-//        addWeighted(roi2,0,roi,1,0,roi2);
-//        
-//#ifdef SHOWWINDOW
-//
-//        getcwd(title, 1000);
-//        GetCurrentDir(title, 1000);
-//        sprintf(title, "%s/train/tmp/%d_%d.bmp", title, type, rand());
-//        ShowWindow(title, trainRoi, WIDTH * 1.5, 0 + trainRoi.rows * ((i) * 2 ));
-//        imwrite(title, trainRoi);
-//#endif
-//        
-//        HOGDescriptor *hog= new HOGDescriptor (cvSize(48,48),cvSize(24,24),cvSize(12,12),cvSize(6,6),9);
-//        vector<float> descriptors;
-//        hog->compute(trainRoi,descriptors,Size(1,1),Size(0,0));
-//        printf("Hog dims: %d \n",descriptors.size());
-//        CvMat* SVMtrainMat = cvCreateMat(1,descriptors.size(),CV_32FC1);
-//        int n =0;
-//        for(vector<float>::iterator iter=descriptors.begin();iter!=descriptors.end();iter++)
-//        {
-//            cvmSet(SVMtrainMat,0,n,*iter);
-//            n++;
-//        }
-//        int ret = svm.predict(SVMtrainMat);
-//        
-//        result[i + 1] = ret + 48;
-//        
-//        if(i + 1 == numericMax) {
-//            result[0] = 0;
-//            break;
-//        }
-//    }
-//    //
-//    
-//    Mat colorLabelImg ;
-//    IcvprLabelColor(labelImg, colorLabelImg) ;
-//    ShowWindow((const char *)"colorImg", colorLabelImg, WIDTH * 2, 0 + HEIGHT * 4);
-//    
-//    printf("result: %c, %c, %c, %c, %c, %d \n", result[1], result[2], result[3], result[4], result[5], result[6]);
-    
-    
-    return result;
-};
-void FindROI(const Mat& _binImg,Mat& _roiImg)
-{
-
 }
 void IcvprCcaByTwoPass(const Mat& _binImg, Mat& _lableImg)
 {
@@ -822,11 +878,6 @@ bool SortLtx(const ALRect lhs,const ALRect rhs)
     return lhs._ltx < rhs._ltx ;
 }
 
-bool SortLight(const ALRect lhs,const ALRect rhs)
-{
-
-	return lhs._lty- HEIGHT/2 < rhs._lty - HEIGHT/2;
-}
 void drawHistImg(const Mat &src,Mat &dst) {
     int histSize = 256;
     float histMaxValue =0;

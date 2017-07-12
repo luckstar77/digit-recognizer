@@ -23,9 +23,9 @@
 using namespace cv;
 using namespace std;
 
-int WIDTH = 320, HEIGHT = 140;
+static unsigned char result[7] = {0};
+const int WIDTH = 320, HEIGHT = 140;
 map<int, ALRect> component;
-vector<ALRect> numeric;
 
 void IcvprCcaByTwoPass(const Mat& _binImg, Mat& _lableImg);
 Scalar IcvprGetRandomColor();
@@ -40,30 +40,30 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
 #ifdef SHOWWINDOW
     srand(time(NULL));
 #endif
-    CvSVM svm;
-    static unsigned char result[7] = {0};
-    component.clear();
-    numeric.clear();
     memset( result, 0, 7 * sizeof(unsigned char) );
     result[0] = 1;
+    
+    CvSVM svm;
     svm.load(svmFilePath);
+    
+    if(svm.get_support_vector_count() == 0) {
+        result[0] = 2;
+        return result;
+    }
+    
+    vector<ALRect> numeric;
+    component.clear();
+    
     Mat src_gray,dst,thres,src_down;
     Mat src = Mat(HEIGHT, WIDTH, CV_8UC3, imageBuf);
+    
     short numericMax = SetNumericMax(type);
+    
     ShowWindow((const char *)"src", src, WIDTH * 1.5, HEIGHT * 3);
     
     cvtColor(src,src_gray,COLOR_BGR2GRAY);
     cvtColor(src,src_down,COLOR_BGR2GRAY);
-	
-    int histSize = 256;
-    float rang[] = {0,255};
-    const float* histRange = {rang};
-    Mat histImg;
-    calcHist(&src_gray,1,0,Mat(),histImg,1,&histSize,&histRange);
-    equalizeHist(src_gray, histImg);
-    Mat showHistImg(256,256,CV_8UC1,Scalar(255));
-    drawHistImg(histImg,showHistImg);
-    ShowWindow((const char *)"srcHistimg", histImg, 0, HEIGHT * 1.5);
+    ShowWindow((const char *)"Grayimage", src_gray, 0, 0);
     
     switch(type) {
         case 1:
@@ -78,7 +78,6 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
         default:
             dilate(src_gray,src_gray,Mat(),Point(-1,-1),1);
     }
-    ShowWindow((const char *)"Grayimage", src_gray, 0, 0);
     
     int T =0;
     double Tmax;
@@ -89,7 +88,6 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
     
     while(true)
     {
-        
         int Tosum =0,Tusum =0;
         int on = 0,un =0;
         for(int i = 0;i<src_gray.rows;i++)

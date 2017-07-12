@@ -70,10 +70,21 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
     Mat numbricROI = src_gray;
     int makeup = 0;
     bool bFindROI = FindROI(src, numbricROI);
-//    bool bFindROI = false;
+    bFindROI = true;
     
+    switch(type) {
+        case 8:
+        case 1:
+        case 5:
+        case 4:
+        case 6:
+        case 11:
+        case 12:
+            break;
+        default:
+            dilate(src_gray,src_gray,Mat(),Point(-1,-1),1);
+    }
     if(!bFindROI) {
-        dilate(src_gray,src_gray,Mat(),Point(-1,-1),1);
         makeup = -29;
         numbricROI = src_gray;
     }
@@ -178,7 +189,7 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
         int height = iter->second._height;
         int count = iter->second._count;
         int cy = HEIGHT / 2;
-        bool isShow =  y <= cy && y + height >= cy && count >= 36 && count <= 760 && height >=14 && height < 45 && width >= 4 && width < 45 && x > ROILTX && x + width < ROIRDX ? true : false;
+        bool isShow =  y <= cy && y + height >= cy && count >= 25 && count <= 760 && height >=13 && height < 45 && width >= 3 && width < 45 && x >= ROILTX && x + width <= ROIRDX + 3 ? true : false;
         char title[1000] ;
         cout << "source component ltx, lty, width, height, count : " << iter->second._ltx << ", " << iter->second._lty << ", " << iter->second._width << ", " << iter->second._height << ", " << iter->second._count << endl;
         if(isShow) {
@@ -540,7 +551,7 @@ bool FindROI(const Mat& _srcImg,Mat& _roiImg)
     Mat src_gray,src_label,src_color,showImg1,showImg2;
     _srcImg.copyTo(src_gray);
     cvtColor(src_gray,src_gray,COLOR_BGR2GRAY);
-    equalizeHist(src_gray,src_gray);
+//    equalizeHist(src_gray,src_gray);
     medianBlur(src_gray,src_gray,3);
     medianBlur(src_gray,src_gray,5);
     //src_gray.convertTo(src_gray,-1,-1,255);
@@ -664,12 +675,12 @@ bool FindROI(const Mat& _srcImg,Mat& _roiImg)
     int roitopy = 0,roibottomy= HEIGHT,roitopindex =-1,roibottomindex =-1;
     for(int i = 0;i < roiic.size();i++)
     {
-        if(roiic[i]._lty < HEIGHT/2 && roitopy < roiic[i]._lty && roiic[i]._height < 20)
+        if(roiic[i]._lty < HEIGHT/2 && roitopy < roiic[i]._lty)
         {
             roitopy = roiic[i]._lty;
             roitopindex = i;
         }
-        else if(roiic[i]._lty > HEIGHT/2 && roibottomy > roiic[i]._lty && roiic[i]._height < 20)
+        else if(roiic[i]._lty > HEIGHT/2 && roibottomy > roiic[i]._lty)
         {
             roibottomy = roiic[i]._lty;
             roibottomindex = i;

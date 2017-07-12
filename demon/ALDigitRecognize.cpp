@@ -36,7 +36,7 @@ void drawHisImg(const Mat &src,Mat &dst);
 short SetNumericMax(int type);
 void ShowWindow(const char *title, Mat src, int x, int y);
 void drawHistImg(const Mat &src, Mat &dst);
-void FindROI(const Mat& _srcImg,Mat& _roiImg);
+bool FindROI(const Mat& _srcImg,Mat& _roiImg);
 int ROILTX = 0, ROILTY = 0, ROIRDX = WIDTH, ROIRDY = HEIGHT;
 
 unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFilePath) {
@@ -67,11 +67,16 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
     drawHistImg(histImg,showHistImg);
     ShowWindow((const char *)"srcHistimg", histImg, 0, HEIGHT * 1.5);
     
-//    dilate(src_gray,src_gray,Mat(),Point(-1,-1),1);
-    ShowWindow((const char *)"Grayimage", src_gray, 0, 0);
-    
     Mat numbricROI;
-    FindROI(src, numbricROI);
+    int makeup = 0;
+    bool bFindROI = FindROI(src, numbricROI);
+    
+    if(!bFindROI) {
+        dilate(src_gray,src_gray,Mat(),Point(-1,-1),1);
+        makeup = -29;
+    }
+    
+    ShowWindow((const char *)"Grayimage", src_gray, 0, 0);
     
     int T =0;
     double Tmax;
@@ -126,7 +131,6 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
     
     cout << "T : " << T << endl;
 
-	int makeup = 0;
     threshold(src_gray,dst,T + makeup,255,THRESH_BINARY);
 	threshold(src_gray,thres,T + makeup,1,THRESH_BINARY);
     threshold(src_down,src_down,T + makeup,255,THRESH_BINARY);    
@@ -148,21 +152,22 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
     trainTempImg.setTo(Scalar::all(0));
     int counts = 0;
     map<int, ALRect>::iterator iter;
-    int ROILX = 0;
-    int ROIRX = WIDTH;
-    for(iter = component.begin(); iter != component.end(); iter++) {
-        int x = iter->second._ltx;
-        int y = iter->second._lty;
-        int width = iter->second._width;
-        int height = iter->second._height;
-        int count = iter->second._count;
-        if(width > WIDTH / 2) {
-            ROILX = x;
-            ROIRX = x + width;
-            break;
+
+    if(!bFindROI) {
+        for(iter = component.begin(); iter != component.end(); iter++) {
+            int x = iter->second._ltx;
+            int y = iter->second._lty;
+            int width = iter->second._width;
+            int height = iter->second._height;
+            int count = iter->second._count;
+            if(width > WIDTH / 2) {
+                ROILTX = x;
+                ROIRDX = x + width;
+                break;
+            }
         }
     }
-    printf("ROI X RANGE : %d, %d\n", ROILX, ROIRX);
+    printf("ROI X RANGE : %d, %d\n", ROILTX, ROIRDX);
     
     for(iter = component.begin(); iter != component.end(); iter++) {
         int x = iter->second._ltx;
@@ -173,6 +178,7 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
         int cy = HEIGHT / 2;
         bool isShow =  y <= cy && y + height >= cy && count >= 36 && count <= 760 && height >=14 && height < 45 && width >= 4 && width < 45 && x > ROILTX && x + width < ROIRDX ? true : false;
         char title[1000] ;
+        cout << "source component ltx, lty, width, height, count : " << iter->second._ltx << ", " << iter->second._lty << ", " << iter->second._width << ", " << iter->second._height << ", " << iter->second._count << endl;
         if(isShow) {
             numeric.push_back(iter->second);
             sprintf(title, "component : %d", iter->first);
@@ -522,12 +528,12 @@ void ShowWindow(const char *title, Mat src, int x, int y) {
 #endif
 }
 
-void FindROI(const Mat& _srcImg,Mat& _roiImg)
+bool FindROI(const Mat& _srcImg,Mat& _roiImg)
 {
     if (_srcImg.empty() ||
         _srcImg.type() != CV_8UC3)
     {
-        return ;
+        return false;
     }
     Mat src_gray,src_label,src_color,showImg1,showImg2;
     _srcImg.copyTo(src_gray);
@@ -651,40 +657,29 @@ void FindROI(const Mat& _srcImg,Mat& _roiImg)
     }
     ShowWindow((const char *)"showImg1", showImg1, 300, HEIGHT * 4);
     ShowWindow((const char *)"showImg2", showImg2,300, HEIGHT * 6);
+    component.clear();
     
-    int roitopy = 0,roibottomy= HEIGHT,roitopindex =0,roibottomindex =0;
+    int roitopy = 0,roibottomy= HEIGHT,roitopindex =-1,roibottomindex =-1;
     for(int i = 0;i < roiic.size();i++)
     {
-        if(roiic[i]._lty < HEIGHT/2 && roitopy < roiic[i]._lty)
+        if(roiic[i]._lty < HEIGHT/2 && roitopy < roiic[i]._lty && roiic[i]._height < 20)
         {
             roitopy = roiic[i]._lty;
             roitopindex = i;
         }
-        else if(roiic[i]._lty > HEIGHT/2 && roibottomy > roiic[i]._lty)
+        else if(roiic[i]._lty > HEIGHT/2 && roibottomy > roiic[i]._lty && roiic[i]._height < 20)
         {
             roibottomy = roiic[i]._lty;
             roibottomindex = i;
         }
     }
     Mat roi;
-    if(roiic.size() >=2 && roitopindex && roibottomindex)
+    if(roiic.size() >=2 && roitopindex >= 0 && roibottomindex >= 0)
     {
-        int x = roiic[roitopindex]._ltx;
+        int x = roiic[roitopindex]._width > roiic[roibottomindex]._width ? roiic[roitopindex]._ltx : roiic[roibottomindex]._ltx;
         int y = roiic[roitopindex]._lty;
         int height =  roiic[roibottomindex]._lty - y ;
-        int width = roiic[roitopindex]._width;
-        if(width > roiic[roibottomindex]._width)
-        {
-            if(width >  WIDTH/2)
-                width = (roiic[roitopindex]._width + roiic[roibottomindex]._width)/2;
-        }
-        else
-        {
-            if(roiic[roibottomindex]._width >  WIDTH/2)
-                width = (roiic[roitopindex]._width + roiic[roibottomindex]._width)/2;
-            else
-                width = roiic[roibottomindex]._width;
-        }
+        int width = roiic[roitopindex]._width > roiic[roibottomindex]._width ? roiic[roitopindex]._width : roiic[roibottomindex]._width;
         cout << "component ltx, lty, width, height : " << x << ", " << y << ", " << width << ", " << height  << endl;
         
         ROILTX = x;
@@ -693,7 +688,9 @@ void FindROI(const Mat& _srcImg,Mat& _roiImg)
         ROIRDY = y + height;
         _roiImg = _srcImg( Rect(x,y,width,height) );
         ShowWindow((const char *)"src_roi", _roiImg,300, HEIGHT * 2);
+        return true;
     } else {
         _roiImg = _srcImg;
+        return false;
     }
 }

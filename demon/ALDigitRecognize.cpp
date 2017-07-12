@@ -67,13 +67,15 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
     drawHistImg(histImg,showHistImg);
     ShowWindow((const char *)"srcHistimg", histImg, 0, HEIGHT * 1.5);
     
-    Mat numbricROI;
+    Mat numbricROI = src_gray;
     int makeup = 0;
     bool bFindROI = FindROI(src, numbricROI);
+//    bool bFindROI = false;
     
     if(!bFindROI) {
         dilate(src_gray,src_gray,Mat(),Point(-1,-1),1);
         makeup = -29;
+        numbricROI = src_gray;
     }
     
     ShowWindow((const char *)"Grayimage", src_gray, 0, 0);
@@ -673,6 +675,10 @@ bool FindROI(const Mat& _srcImg,Mat& _roiImg)
             roibottomindex = i;
         }
     }
+    
+    cout << "top component ltx, lty, width, height : " << roiic[roitopindex]._ltx << ", " << roiic[roitopindex]._lty << ", " << roiic[roitopindex]._width << ", " << roiic[roitopindex]._height  << endl;
+    cout << "bottom component ltx, lty, width, height : " << roiic[roibottomindex]._ltx << ", " << roiic[roibottomindex]._lty << ", " << roiic[roibottomindex]._width << ", " << roiic[roibottomindex]._height  << endl;
+    
     Mat roi;
     if(roiic.size() >=2 && roitopindex >= 0 && roibottomindex >= 0)
     {

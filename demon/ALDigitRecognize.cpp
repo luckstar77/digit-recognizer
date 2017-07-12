@@ -61,11 +61,12 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
     float rang[] = {0,255};
     const float* histRange = {rang};
     Mat histImg;
+	equalizeHist(src_gray, histImg);
     calcHist(&src_gray,1,0,Mat(),histImg,1,&histSize,&histRange);
-    equalizeHist(src_gray, histImg);
+    
     Mat showHistImg(256,256,CV_8UC1,Scalar(255));
     drawHistImg(histImg,showHistImg);
-    ShowWindow((const char *)"srcHistimg", histImg, 0, HEIGHT * 1.5);
+    ShowWindow((const char *)"srcHistimg", showHistImg, 0, HEIGHT * 1.5);
     
     Mat numbricROI = src_gray;
     int makeup = 0;
@@ -672,7 +673,7 @@ bool FindROI(const Mat& _srcImg,Mat& _roiImg)
     ShowWindow((const char *)"showImg2", showImg2,300, HEIGHT * 6);
     component.clear();
     
-    int roitopy = 0,roibottomy= HEIGHT,roitopindex =-1,roibottomindex =-1;
+    int roitopy = 0,roibottomy= HEIGHT,roitopindex =0,roibottomindex =0;
     for(int i = 0;i < roiic.size();i++)
     {
         if(roiic[i]._lty < HEIGHT/2 && roitopy < roiic[i]._lty)
@@ -693,10 +694,24 @@ bool FindROI(const Mat& _srcImg,Mat& _roiImg)
     Mat roi;
     if(roiic.size() >=2 && roitopindex >= 0 && roibottomindex >= 0)
     {
-        int x = roiic[roitopindex]._width > roiic[roibottomindex]._width ? roiic[roitopindex]._ltx : roiic[roibottomindex]._ltx;
-        int y = roiic[roitopindex]._lty;
-        int height =  roiic[roibottomindex]._lty - y ;
-        int width = roiic[roitopindex]._width > roiic[roibottomindex]._width ? roiic[roitopindex]._width : roiic[roibottomindex]._width;
+		int x = roiic[roitopindex]._ltx;
+		int y = roiic[roitopindex]._lty;
+		int height =  roiic[roibottomindex]._lty - y ;
+		int width = roiic[roitopindex]._width;
+		if(width > roiic[roibottomindex]._width)
+		{
+			if(width >  WIDTH/2)
+				width = (roiic[roitopindex]._width + roiic[roibottomindex]._width)/2;
+		}
+		else
+		{
+			if(roiic[roibottomindex]._width >  WIDTH/2)
+				width = (roiic[roitopindex]._width + roiic[roibottomindex]._width)/2;
+			else
+				width = roiic[roibottomindex]._width;
+		}
+
+
         cout << "component ltx, lty, width, height : " << x << ", " << y << ", " << width << ", " << height  << endl;
         
         ROILTX = x;

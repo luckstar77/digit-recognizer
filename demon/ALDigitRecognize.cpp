@@ -61,8 +61,9 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
     float rang[] = {0,255};
     const float* histRange = {rang};
     Mat histImg;
+	equalizeHist(src_gray, histImg);
     calcHist(&src_gray,1,0,Mat(),histImg,1,&histSize,&histRange);
-    equalizeHist(src_gray, histImg);
+    
     Mat showHistImg(256,256,CV_8UC1,Scalar(255));
     drawHistImg(histImg,showHistImg);
     ShowWindow((const char *)"srcHistimg", showHistImg, 0, HEIGHT * 1.5);

@@ -26,7 +26,6 @@ using namespace std;
 int WIDTH = 320, HEIGHT = 140;
 map<int, ALRect> component;
 vector<ALRect> numeric;
-CvSVM svm;
 
 void IcvprCcaByTwoPass(const Mat& _binImg, Mat& _lableImg);
 Scalar IcvprGetRandomColor();
@@ -41,6 +40,7 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
 #ifdef SHOWWINDOW
     srand(time(NULL));
 #endif
+    CvSVM svm;
     static unsigned char result[7] = {0};
     component.clear();
     numeric.clear();
@@ -65,7 +65,19 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
     drawHistImg(histImg,showHistImg);
     ShowWindow((const char *)"srcHistimg", histImg, 0, HEIGHT * 1.5);
     
-    dilate(src_gray,src_gray,Mat(),Point(-1,-1),1);
+    switch(type) {
+        case 1:
+        case 211:
+        case 4:
+        case 321:
+        case 11:
+        case 511:
+        case 12:
+        case 512:
+            break;
+        default:
+            dilate(src_gray,src_gray,Mat(),Point(-1,-1),1);
+    }
     ShowWindow((const char *)"Grayimage", src_gray, 0, 0);
     
     int T =0;
@@ -166,7 +178,8 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
         int height = iter->second._height;
         int count = iter->second._count;
         int cy = HEIGHT / 2;
-        bool isShow =  y <= cy && y + height >= cy && count >= 36 && count <= 760 && height >=14 && height < 45 && width >= 4 && width < 45 && x > ROILX && x + width < ROIRX ? true : false;
+        bool isShow =  y <= cy && y + height >= cy && count >= 33 && count <= 760 && height >=12 && height < 45 && width >= 4 && width < 45 && x > ROILX && x + width < ROIRX ? true : false;
+        cout << "source component ltx, lty, width, height, count : " << iter->second._ltx << ", " << iter->second._lty << ", " << iter->second._width << ", " << iter->second._height << ", " << iter->second._count << endl;
         char title[1000] ;
         if(isShow) {
             numeric.push_back(iter->second);

@@ -683,10 +683,24 @@ bool FindROI(const Mat& _srcImg,Mat& _roiImg)
     Mat roi;
     if(roiic.size() >=2 && roitopindex >= 0 && roibottomindex >= 0)
     {
-        int x = roiic[roitopindex]._width > roiic[roibottomindex]._width ? roiic[roitopindex]._ltx : roiic[roibottomindex]._ltx;
-        int y = roiic[roitopindex]._lty;
-        int height =  roiic[roibottomindex]._lty - y ;
-        int width = roiic[roitopindex]._width > roiic[roibottomindex]._width ? roiic[roitopindex]._width : roiic[roibottomindex]._width;
+		int x = roiic[roitopindex]._ltx;
+		int y = roiic[roitopindex]._lty;
+		int height =  roiic[roibottomindex]._lty - y ;
+		int width = roiic[roitopindex]._width;
+		if(width > roiic[roibottomindex]._width)
+		{
+			if(width >  WIDTH/2)
+				width = (roiic[roitopindex]._width + roiic[roibottomindex]._width)/2;
+		}
+		else
+		{
+			if(roiic[roibottomindex]._width >  WIDTH/2)
+				width = (roiic[roitopindex]._width + roiic[roibottomindex]._width)/2;
+			else
+				width = roiic[roibottomindex]._width;
+		}
+
+
         cout << "component ltx, lty, width, height : " << x << ", " << y << ", " << width << ", " << height  << endl;
         
         ROILTX = x;

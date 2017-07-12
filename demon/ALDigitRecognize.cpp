@@ -662,15 +662,15 @@ bool FindROI(const Mat& _srcImg,Mat& _roiImg)
     ShowWindow((const char *)"showImg2", showImg2,300, HEIGHT * 6);
     component.clear();
     
-    int roitopy = 0,roibottomy= HEIGHT,roitopindex =-1,roibottomindex =-1;
+    int roitopy = 0,roibottomy= HEIGHT,roitopindex =0,roibottomindex =0;
     for(int i = 0;i < roiic.size();i++)
     {
-        if(roiic[i]._lty < HEIGHT/2 && roitopy < roiic[i]._lty && roiic[i]._height < 20)
+        if(roiic[i]._lty < HEIGHT/2 && roitopy < roiic[i]._lty )
         {
             roitopy = roiic[i]._lty;
             roitopindex = i;
         }
-        else if(roiic[i]._lty > HEIGHT/2 && roibottomy > roiic[i]._lty && roiic[i]._height < 20)
+        else if(roiic[i]._lty > HEIGHT/2 && roibottomy > roiic[i]._lty )
         {
             roibottomy = roiic[i]._lty;
             roibottomindex = i;

@@ -65,7 +65,7 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
     equalizeHist(src_gray, histImg);
     Mat showHistImg(256,256,CV_8UC1,Scalar(255));
     drawHistImg(histImg,showHistImg);
-    ShowWindow((const char *)"srcHistimg", histImg, 0, HEIGHT * 1.5);
+    ShowWindow((const char *)"srcHistimg", showHistImg, 0, HEIGHT * 1.5);
     
     Mat numbricROI = src_gray;
     int makeup = 0;

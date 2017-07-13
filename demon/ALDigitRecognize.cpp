@@ -550,11 +550,6 @@ bool FindROI(const Mat& _srcImg,Mat& _roiImg)
     Mat src_gray,src_label,src_color,showImg1,showImg2;
     _srcImg.copyTo(src_gray);
     cvtColor(src_gray,src_gray,COLOR_BGR2GRAY);
-<<<<<<< HEAD
-    //equalizeHist(src_gray,src_gray);
-=======
-//    equalizeHist(src_gray,src_gray);
->>>>>>> 14aeec5ca9c467c194d83c7a9fc61eac272ec27d
     medianBlur(src_gray,src_gray,3);
     medianBlur(src_gray,src_gray,5);
     //src_gray.convertTo(src_gray,-1,-1,255);

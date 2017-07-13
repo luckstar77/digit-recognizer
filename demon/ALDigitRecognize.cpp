@@ -42,44 +42,55 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
 #ifdef SHOWWINDOW
     srand(time(NULL));
 #endif
-    memset( result, 0, 7 * sizeof(unsigned char) );
-    result[0] = 1;
-    
     CvSVM svm;
     svm.load(svmFilePath);
-    
-    if(svm.get_support_vector_count() == 0) {
-        result[0] = 2;
-        return result;
-    }
     
     vector<ALRect> numeric;
     component.clear();
     
+    memset( result, 0, 7 * sizeof(unsigned char) );
+    result[0] = 1;
+    
+    if(svm.get_var_count() == 0) {
+        result[0] = 2;
+        return result;
+    }
+    
     Mat src_gray,dst,thres,src_down;
     Mat src = Mat(HEIGHT, WIDTH, CV_8UC3, imageBuf);
-    
     short numericMax = SetNumericMax(type);
-    
     ShowWindow((const char *)"src", src, WIDTH * 1.5, HEIGHT * 3);
     
     cvtColor(src,src_gray,COLOR_BGR2GRAY);
     cvtColor(src,src_down,COLOR_BGR2GRAY);
-    ShowWindow((const char *)"Grayimage", src_gray, 0, 0);
+    
+    Mat numbricROI = src_gray;
+    int makeup = 0;
+    bool bFindROI = FindROI(src, numbricROI);
     
     switch(type) {
         case 1:
         case 211:
         case 4:
         case 321:
+        case 5:
+        case 322:
+        case 6:
+        case 331:
+        case 9:
+        case 431:
         case 11:
         case 511:
         case 12:
         case 512:
+        case 15:
+        case 611:
             break;
         default:
             dilate(src_gray,src_gray,Mat(),Point(-1,-1),1);
     }
+    
+    ShowWindow((const char *)"Grayimage", src_gray, 0, 0);
     
     int T =0;
     double Tmax;
@@ -90,6 +101,7 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
     
     while(true)
     {
+        
         int Tosum =0,Tusum =0;
         int on = 0,un =0;
         for(int i = 0;i<numbricROI.rows;i++)
@@ -162,8 +174,7 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
         int height = iter->second._height;
         int count = iter->second._count;
         int cy = HEIGHT / 2;
-        bool isShow =  y <= cy && y + height >= cy && count >= 33 && count <= 760 && height >=12 && height < 45 && width >= 4 && width < 45 && x > ROILX && x + width < ROIRX ? true : false;
-        cout << "source component ltx, lty, width, height, count : " << iter->second._ltx << ", " << iter->second._lty << ", " << iter->second._width << ", " << iter->second._height << ", " << iter->second._count << endl;
+        bool isShow =  y <= cy+1 && y + height >= cy && count >= 25 && count <= 760 && height >=11 && height <= 46 && width >= 3 && width < 46 && x >= ROILTX && x + width <= ROIRDX + 5 ? true : false;
         char title[1000] ;
         cout << "source component ltx, lty, width, height, count : " << iter->second._ltx << ", " << iter->second._lty << ", " << iter->second._width << ", " << iter->second._height << ", " << iter->second._count << endl;
         if(isShow) {

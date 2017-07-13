@@ -71,7 +71,6 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
     Mat numbricROI = src_gray;
     int makeup = 0;
     bool bFindROI = FindROI(src, numbricROI);
-    bFindROI = true;
     
     switch(type) {
         case 1:
@@ -80,14 +79,10 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
         case 6:
         case 11:
         case 12:
-		case 9:
+        case 9:
             break;
         default:
             dilate(src_gray,src_gray,Mat(),Point(-1,-1),1);
-    }
-    if(!bFindROI) {
-        makeup = -29;
-        numbricROI = src_gray;
     }
     
     ShowWindow((const char *)"Grayimage", src_gray, 0, 0);
@@ -164,21 +159,7 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
     trainTempImg.setTo(Scalar::all(0));
     int counts = 0;
     map<int, ALRect>::iterator iter;
-
-    if(!bFindROI) {
-        for(iter = component.begin(); iter != component.end(); iter++) {
-            int x = iter->second._ltx;
-            int y = iter->second._lty;
-            int width = iter->second._width;
-            int height = iter->second._height;
-            int count = iter->second._count;
-            if(width > WIDTH / 2) {
-                ROILTX = x;
-                ROIRDX = x + width;
-                break;
-            }
-        }
-    }
+    
     printf("ROI X RANGE : %d, %d\n", ROILTX, ROIRDX);
     
     for(iter = component.begin(); iter != component.end(); iter++) {
@@ -716,20 +697,11 @@ bool FindROI(const Mat& _srcImg,Mat& _roiImg)
 		int y = roiic[roitopindex]._lty;
 		int height =  roiic[roibottomindex]._rdy - y ;
 		int width = roiic[roitopindex]._width;
-		if(width > roiic[roibottomindex]._width)
-		{
-			if(width >  WIDTH/2)
-				width = (roiic[roitopindex]._width + roiic[roibottomindex]._width)/2;
+		if(width < roiic[roibottomindex]._width)
+        {
+            x = roiic[roibottomindex]._ltx;
+            width = roiic[roibottomindex]._width;
 		}
-		else
-		{
-			if(roiic[roibottomindex]._width >  WIDTH/2)
-				width = (roiic[roitopindex]._width + roiic[roibottomindex]._width)/2;
-			else
-				width = roiic[roibottomindex]._width;
-		}
-		if(x + width >= WIDTH)
-			width  -= 20;
 
         cout << "component ltx, lty, width, height : " << x << ", " << y << ", " << width << ", " << height  << endl;
         

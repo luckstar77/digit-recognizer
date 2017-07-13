@@ -23,6 +23,7 @@
 using namespace cv;
 using namespace std;
 
+static unsigned char result[7] = {0};
 const int WIDTH = 320, HEIGHT = 140;
 map<int, ALRect> component;
 
@@ -41,14 +42,14 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
 #ifdef SHOWWINDOW
     srand(time(NULL));
 #endif
-    vector<ALRect> numeric;
     CvSVM svm;
+    svm.load(svmFilePath);
     
-    static unsigned char result[7] = {0};
+    vector<ALRect> numeric;
     component.clear();
+    
     memset( result, 0, 7 * sizeof(unsigned char) );
     result[0] = 1;
-    svm.load(svmFilePath);
     
     if(svm.get_var_count() == 0) {
         result[0] = 2;

@@ -29,7 +29,6 @@ vector<ALRect> numeric;
 CvSVM svm;
 
 void IcvprCcaByTwoPass(const Mat& _binImg, Mat& _lableImg);
-void FindROI(const Mat& _srcImg,Mat& _roiImg);
 Scalar IcvprGetRandomColor();
 void IcvprLabelColor(const Mat& _labelImg, Mat& _colorLabelImg);
 bool SortLtx(const ALRect lhs,const ALRect rhs);
@@ -38,6 +37,8 @@ short SetNumericMax(int type);
 void ShowWindow(const char *title, Mat src, int x, int y);
 void drawHistImg(const Mat &src, Mat &dst);
 int thresh = 50,N = 11;
+bool FindROI(const Mat& _srcImg,Mat& _roiImg);
+int ROILTX = 0, ROILTY = 0, ROIRDX = WIDTH, ROIRDY = HEIGHT;
 
 unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFilePath) {
 #ifdef SHOWWINDOW
@@ -49,140 +50,53 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
     memset( result, 0, 7 * sizeof(unsigned char) );
     result[0] = 1;
     svm.load(svmFilePath);
-    Mat src_gray,dst,thres,src_down,src_crop;
-    int light=0;
+    Mat src_gray,dst,thres,src_down;
     Mat src = Mat(HEIGHT, WIDTH, CV_8UC3, imageBuf);
     short numericMax = SetNumericMax(type);
     ShowWindow((const char *)"src", src, WIDTH * 1.5, HEIGHT * 3);
     
     cvtColor(src,src_gray,COLOR_BGR2GRAY);
     cvtColor(src,src_down,COLOR_BGR2GRAY);
-    cvtColor(src,src_crop,COLOR_BGR2GRAY);
-	Mat a;
-	FindROI(src, a);
-	//add(a,c,c);
-
-	//for(int h =1;h< c.rows-1;h++)
-	//{
-	//	for(int w=0;w<c.cols-1;w++)
-	//	{
-	//		if(c.at<uchar>(h,w) ==255 & c.at<uchar>(h+1,w) == 255 & c.at<uchar>(h+1,w+1) == 255 & c.at<uchar>(h-1,w) == 255)
-	//			c.at<uchar>(h,w) ==255;
-	//		else
-	//			c.at<uchar>(h,w) == 0;
-	//	}
-	//}
-	//subtract(a,c,c);
-	//ShowWindow((const char *)"colorimge33", c,300, HEIGHT * 5);
-
-	//for(int h =0;h< c.rows/2;h++)
-	//{
-	//	for(int w=0;w<c.cols/10;w++)
-	//	{
-	//		int count =0;
-	//		for(int x =  h*2;x<h*2+2 ;x++)
-	//		{
-	//			for(int y = w*10;y < w*10+10;y++)
-	//			{
-	//				if(c.at<uchar>(x,y) ==255)
-	//					count++;
-	//			}
-	//		}
-	//		for(int x =  h*2;x<h*2+2 ;x++)
-	//		{
-	//			for(int y = w*10;y < w*10+10;y++)
-	//			{
-	//				if(count >10)
-	//					c.at<uchar>(x,y) = 0;
-	//				else
-	//					c.at<uchar>(x,y) = 255;
-	//			}
-	//		}
-	//	}
-	//}
-
-	//ShowWindow((const char *)"colorimge44", c,300, HEIGHT * 6);
-	//src_color.convertTo(src_color,-1,-1,255);
-	//
-	//Sobel(src_color,a,CV_8U,1,0,3,1,0,BORDER_DEFAULT);
-	//Sobel(src_color,b,CV_8U,0,1,3,1,0,BORDER_DEFAULT);
-	//add(a,b,c);
-	//ShowWindow((const char *)"colorimge30", c,300, HEIGHT * 5);
-
-	Mat test1,test2,test3,test21;
-	src_gray.copyTo(test1);
-	src_gray.copyTo(test2);
-	src_gray.copyTo(test21);
-
-	medianBlur(test2,test2,3);
-	//medianBlur(test21,test21,5);
-	add(test1,test2,test1);
-	//add(test1,test21,test1);
-	vector<vector<Point>> squares;
 	
-	//dilate(test1,test1,Mat(),Point(-1,-1),1);
-    test1.copyTo(test3);
-	//subtract(src_color,test3,test3);
-	//test1.convertTo(test1,-1,-1,255);
-	ShowWindow((const char *)"test", test3, 0, HEIGHT * 3);
-	//threshold(test3,test3,125 ,255,THRESH_BINARY);
-	 //ShowWindow((const char *)"corners2", test3,300, HEIGHT * 4);
-
-	//test1.copyTo(src_gray);
     int histSize = 256;
     float rang[] = {0,255};
     const float* histRange = {rang};
     Mat histImg;
+	equalizeHist(src_gray, histImg);
     calcHist(&src_gray,1,0,Mat(),histImg,1,&histSize,&histRange);
+    
     Mat showHistImg(256,256,CV_8UC1,Scalar(255));
     drawHistImg(histImg,showHistImg);
     ShowWindow((const char *)"srcHistimg", showHistImg, 0, HEIGHT * 1.5);
-
-    while(true)
-    {
-        int piexl[3] = {0};
-        for(int i =0;i<src_gray.rows;i++)
-        {
-            for(int j = 0;j< src_gray.cols;j++)
-            {
-                if(src_gray.at<uchar>(i,j) < 120 ){
-                    piexl[0] ++;}
-                else if(src_gray.at<uchar>(i,j) <= 230){
-                    piexl[1] ++;}
-                else {
-                    piexl[2] ++;}
-            }
-        }
-        if(piexl[0] > (piexl[1]+(src_gray.rows *  src_gray.cols) / 6) && piexl[0] > piexl[2]){
-            src_gray.convertTo(src_gray,-1,1,15);
-            light -=15;
-        }
-        else if(piexl[2] > (piexl[1]+(src_gray.rows *  src_gray.cols) / 6) && piexl[2] > piexl[0]){
-            src_gray.convertTo(src_gray,-1,1,-15);
-            light +=15;
-        }
-        else
+    
+    Mat numbricROI = src_gray;
+    int makeup = 0;
+    bool bFindROI = FindROI(src, numbricROI);
+    bFindROI = true;
+    
+    switch(type) {
+        case 8:
+        case 1:
+        case 5:
+        case 4:
+        case 6:
+        case 11:
+        case 12:
             break;
+        default:
+            dilate(src_gray,src_gray,Mat(),Point(-1,-1),1);
     }
-    calcHist(&src_gray,1,0,Mat(),histImg,1,&histSize,&histRange);
-    showHistImg = Mat(256,256,CV_8UC1,Scalar(255));
-    drawHistImg(histImg,showHistImg);
-    ShowWindow((const char *)"srcHistimg2", showHistImg, 0, HEIGHT * 3);
 
-	//Mat test ;
-    //adaptiveThreshold(src_gray, test, 255, ADAPTIVE_THRESH_MEAN_C, THRESH_BINARY,85, 0);
-    //medianBlur(test,test,3);
-	//dilate(test4,test4,Mat(),Point(-1,-1),1);
-	//ShowWindow((const char *)"adaptiveThreshold", test, 0, 0);
-    ShowWindow((const char *)"Grayimage", src_gray, 0, 0);
- //   src_gray = test4;
-	//src_down = test4;
-    dilate(src_gray,src_gray,Mat(),Point(-1,-1),1);
+    if(!bFindROI) {
+        makeup = -29;
+        numbricROI = src_gray;
+    }
+
     ShowWindow((const char *)"Grayimage", src_gray, 0, 0);
     
     int T =0;
     double Tmax;
-    double Tmin;;
+    double Tmin;
     minMaxIdx(src_gray,&Tmin,&Tmax);
     T = ( Tmax + Tmin ) / 2;
     printf("Brightness MIN, MAX: %f, %f\n", Tmin, Tmax);
@@ -192,18 +106,18 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
         
         int Tosum =0,Tusum =0;
         int on = 0,un =0;
-        for(int i = 0;i<src_gray.rows;i++)
+        for(int i = 0;i<numbricROI.rows;i++)
         {
-            for(int j = 0 ;j <src_gray.cols; j++)
+            for(int j = 0 ;j <numbricROI.cols; j++)
             {
-                if(src_gray.at<uchar>(i,j) >= T )
+                if(numbricROI.at<uchar>(i,j) >= T )
                 {
-                    Tosum += src_gray.at<uchar>(i,j);
+                    Tosum += numbricROI.at<uchar>(i,j);
                     on ++;
                 }
                 else
                 {
-                    Tusum += src_gray.at<uchar>(i,j);
+                    Tusum += numbricROI.at<uchar>(i,j);
                     un ++;
                 }
             }
@@ -233,118 +147,11 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
     
     cout << "T : " << T << endl;
 
-    //imshow("adaptiv",test);
-    //threshold(src_down,src_down,0,255,THRESH_BINARY);
-   //erode(test1,test1,Mat(),Point(-1,-1),40);
-	//dilate(test1,test1,Mat(),Point(-1,-1),10);
-   
-    ShowWindow((const char *)"dilate", test1, WIDTH * 1, HEIGHT * 2.5);
-	Canny(test1, dst, 300, 255, 3);
-    ShowWindow((const char *)"canny", dst, WIDTH * 1, HEIGHT * 2);
-    vector<vector<Point>> contours;
-    vector<Vec4i> hierarchy;
-    RNG rng(12345);
-    findContours(dst, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
-    
-    map<int, ALRect> ROIRects;
-    Mat imageROI;
-    
-    for(int i = 0; i<contours.size(); i++){
-        for(int j = 0; j < contours[i].size(); j++) {
-            int x = contours[i][j].x;
-            int y = contours[i][j].y;
-            if(j > 0) {
-                if(ROIRects[i]._ltx > x)
-                    ROIRects[i].SetLtx(x);
-                if(ROIRects[i]._lty > y)
-                    ROIRects[i].SetLty(y);
-                if(ROIRects[i]._rdx < x)
-                    ROIRects[i].SetRdx(x);
-                if(ROIRects[i]._rdy < y)
-                    ROIRects[i].SetRdy(y);
-                ROIRects[i].AddCount(1);
-            } else {
-                ROIRects[i] = ALRect(x, y, 1, 1, 1);
-            }
-        }
-        int x = ROIRects[i]._ltx;
-        int y = ROIRects[i]._lty;
-        int width = ROIRects[i]._width;
-        int height = ROIRects[i]._height;
-        int count = ROIRects[i]._count;
-        float ratio = (float)width / (float)height;
-        int cy = HEIGHT / 2;
-        bool isShow =  y <= cy && y + height >= cy && width > 150 && width < 200 ? true : false;
-        if(isShow) {
-            cout << "ROIRects ltx, lty, width, height, count, ratio : " << ROIRects[i]._ltx << ", " << ROIRects[i]._lty << ", " << ROIRects[i]._width << ", " << ROIRects[i]._height << ", " << ROIRects[i]._count << ", " << ratio << endl;
-            
-            Scalar color = Scalar( rng.uniform(0, 255), rng.uniform(0, 255), 255);
-            drawContours(dst, contours, i, color, 2, 8, hierarchy);
-            //方法一
-            imageROI=src_gray(Rect(x,y,width,height));
-            ShowWindow((const char *)"imageROI", imageROI, WIDTH * 1, HEIGHT * 4);
-        }
-    }
-    if (imageROI.empty()) imageROI=src_gray(Rect(0,0,WIDTH,HEIGHT));
-    
-    
-    minMaxIdx(imageROI,&Tmin,&Tmax);
-    T = ( Tmax + Tmin ) / 2;
-    printf("Brightness2 MIN, MAX: %f, %f\n", Tmin, Tmax);
-    
-    while(true)
-    {
-        
-        int Tosum =0,Tusum =0;
-        int on = 0,un =0;
-        for(int i = 0;i<imageROI.rows;i++)
-        {
-            for(int j = 0 ;j <imageROI.cols; j++)
-            {
-                if(imageROI.at<uchar>(i,j) >= T )
-                {
-                    Tosum += imageROI.at<uchar>(i,j);
-                    on ++;
-                }
-                else
-                {
-                    Tusum += imageROI.at<uchar>(i,j);
-                    un ++;
-                }
-            }
-        }
-        if(on != 0)
-        {
-            Tosum /=on;
-        }
-        else
-        {
-            Tosum = 0;
-        }
-        if(un != 0)
-        {
-            Tusum /=un;
-        }
-        else
-        {
-            Tusum = 0;
-        }
-        
-        if((Tosum+Tusum) /2  != T)
-            T = (Tosum+Tusum) /2;
-        else
-            break;
-    }
-    
-    cout << "T2 : " << T << endl;
-
-	int makeup = -29;
     threshold(src_gray,dst,T + makeup,255,THRESH_BINARY);
 	threshold(src_gray,thres,T + makeup,1,THRESH_BINARY);
     threshold(src_down,src_down,T + makeup,255,THRESH_BINARY);    
     ShowWindow((const char *)"ALthreshold", dst, WIDTH * 2, 0);
-    ShowWindow((const char *)"src_down", thres, WIDTH * 1, 0);
-    component.clear();
+
     Mat labelImg ;
     IcvprCcaByTwoPass(thres, labelImg) ;
     
@@ -354,27 +161,26 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
     labelImg.convertTo(grayImg, CV_8UC1) ;
     ShowWindow((const char *)"labelImg", grayImg, WIDTH * 2, HEIGHT * 2);
     
-    /*CvSVM svm;
-     svm.load("D:\\OCR\\digital-recognize\\demon\\gas.xml");*/
-    Mat trainTempImg= Mat(Size(28,28),8,3);    
+    Mat trainTempImg= Mat(Size(48,48),8,3);
     trainTempImg.setTo(Scalar::all(0));
     int counts = 0;
     map<int, ALRect>::iterator iter;
-    int ROILX = 0;
-    int ROIRX = WIDTH;
-    for(iter = component.begin(); iter != component.end(); iter++) {
-        int x = iter->second._ltx;
-        int y = iter->second._lty;
-        int width = iter->second._width;
-        int height = iter->second._height;
-        int count = iter->second._count;
-        if(width > WIDTH / 2) {
-            ROILX = x;
-            ROIRX = x + width;
-            break;
+
+    if(!bFindROI) {
+        for(iter = component.begin(); iter != component.end(); iter++) {
+            int x = iter->second._ltx;
+            int y = iter->second._lty;
+            int width = iter->second._width;
+            int height = iter->second._height;
+            int count = iter->second._count;
+            if(width > WIDTH / 2) {
+                ROILTX = x;
+                ROIRDX = x + width;
+                break;
+            }
         }
     }
-    printf("ROI X RANGE : %d, %d\n", ROILX, ROIRX);
+    printf("ROI X RANGE : %d, %d\n", ROILTX, ROIRDX);
     
     for(iter = component.begin(); iter != component.end(); iter++) {
         int x = iter->second._ltx;
@@ -383,8 +189,9 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
         int height = iter->second._height;
         int count = iter->second._count;
         int cy = HEIGHT / 2;
-        bool isShow =  y <= cy && y + height >= cy && count >= 36 && count <= 760 && height >=14 && height < 45 && width >= 4 && width < 45 && x > ROILX && x + width < ROIRX ? true : false;
+        bool isShow =  y <= cy && y + height >= cy && count >= 25 && count <= 760 && height >=13 && height < 45 && width >= 3 && width < 45 && x >= ROILTX && x + width <= ROIRDX + 3 ? true : false;
         char title[1000] ;
+        cout << "source component ltx, lty, width, height, count : " << iter->second._ltx << ", " << iter->second._lty << ", " << iter->second._width << ", " << iter->second._height << ", " << iter->second._count << endl;
         if(isShow) {
             numeric.push_back(iter->second);
             sprintf(title, "component : %d", iter->first);
@@ -449,12 +256,12 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
     
     return result;
 };
-void FindROI(const Mat& _srcImg,Mat& _roiImg)
+bool FindROI(const Mat& _srcImg,Mat& _roiImg)
 {
 	if (_srcImg.empty() ||
           _srcImg.type() != CV_8UC3)
     {
-        return ;
+        return false ;
     }
 	Mat src_gray,src_label,src_color,showImg1,showImg2;
 	_srcImg.copyTo(src_gray);
@@ -900,4 +707,3 @@ void ShowWindow(const char *title, Mat src, int x, int y) {
     moveWindow( title, x, y );
 #endif
 }
-

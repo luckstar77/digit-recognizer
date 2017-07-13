@@ -35,6 +35,8 @@ void drawHisImg(const Mat &src,Mat &dst);
 short SetNumericMax(int type);
 void ShowWindow(const char *title, Mat src, int x, int y);
 void drawHistImg(const Mat &src, Mat &dst);
+bool FindROI(const Mat& _srcImg,Mat& _roiImg);
+int ROILTX = 0, ROILTY = 0, ROIRDX = WIDTH, ROIRDY = HEIGHT;
 
 unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFilePath) {
 #ifdef SHOWWINDOW
@@ -90,18 +92,18 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
     {
         int Tosum =0,Tusum =0;
         int on = 0,un =0;
-        for(int i = 0;i<src_gray.rows;i++)
+        for(int i = 0;i<numbricROI.rows;i++)
         {
-            for(int j = 0 ;j <src_gray.cols; j++)
+            for(int j = 0 ;j <numbricROI.cols; j++)
             {
-                if(src_gray.at<uchar>(i,j) >= T )
+                if(numbricROI.at<uchar>(i,j) >= T )
                 {
-                    Tosum += src_gray.at<uchar>(i,j);
+                    Tosum += numbricROI.at<uchar>(i,j);
                     on ++;
                 }
                 else
                 {
-                    Tusum += src_gray.at<uchar>(i,j);
+                    Tusum += numbricROI.at<uchar>(i,j);
                     un ++;
                 }
             }
@@ -131,7 +133,6 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
     
     cout << "T : " << T << endl;
 
-	int makeup = -29;
     threshold(src_gray,dst,T + makeup,255,THRESH_BINARY);
 	threshold(src_gray,thres,T + makeup,1,THRESH_BINARY);
     threshold(src_down,src_down,T + makeup,255,THRESH_BINARY);    
@@ -147,27 +148,12 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
     labelImg.convertTo(grayImg, CV_8UC1) ;
     ShowWindow((const char *)"labelImg", grayImg, WIDTH * 2, HEIGHT * 2);
     
-    /*CvSVM svm;
-     svm.load("D:\\OCR\\digital-recognize\\demon\\gas.xml");*/
     Mat trainTempImg= Mat(Size(48,48),8,3);
     trainTempImg.setTo(Scalar::all(0));
     int counts = 0;
     map<int, ALRect>::iterator iter;
-    int ROILX = 0;
-    int ROIRX = WIDTH;
-    for(iter = component.begin(); iter != component.end(); iter++) {
-        int x = iter->second._ltx;
-        int y = iter->second._lty;
-        int width = iter->second._width;
-        int height = iter->second._height;
-        int count = iter->second._count;
-        if(width > WIDTH / 2) {
-            ROILX = x;
-            ROIRX = x + width;
-            break;
-        }
-    }
-    printf("ROI X RANGE : %d, %d\n", ROILX, ROIRX);
+    
+    printf("ROI X RANGE : %d, %d\n", ROILTX, ROIRDX);
     
     for(iter = component.begin(); iter != component.end(); iter++) {
         int x = iter->second._ltx;
@@ -179,6 +165,7 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
         bool isShow =  y <= cy && y + height >= cy && count >= 33 && count <= 760 && height >=12 && height < 45 && width >= 4 && width < 45 && x > ROILX && x + width < ROIRX ? true : false;
         cout << "source component ltx, lty, width, height, count : " << iter->second._ltx << ", " << iter->second._lty << ", " << iter->second._width << ", " << iter->second._height << ", " << iter->second._count << endl;
         char title[1000] ;
+        cout << "source component ltx, lty, width, height, count : " << iter->second._ltx << ", " << iter->second._lty << ", " << iter->second._width << ", " << iter->second._height << ", " << iter->second._count << endl;
         if(isShow) {
             numeric.push_back(iter->second);
             sprintf(title, "component : %d", iter->first);
@@ -204,7 +191,6 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
         addWeighted(roi2,0,roi,1,0,roi2);
         
 #ifdef SHOWWINDOW
-
         getcwd(title, 1000);
         GetCurrentDir(title, 1000);
         sprintf(title, "%s/train/tmp/%d_%d.bmp", title, type, rand());
@@ -528,3 +514,199 @@ void ShowWindow(const char *title, Mat src, int x, int y) {
 #endif
 }
 
+bool FindROI(const Mat& _srcImg,Mat& _roiImg)
+{
+    if (_srcImg.empty() ||
+        _srcImg.type() != CV_8UC3)
+    {
+        return false;
+    }
+    Mat src_gray,src_label,src_color,showImg1,showImg2;
+    _srcImg.copyTo(src_gray);
+    cvtColor(src_gray,src_gray,COLOR_BGR2GRAY);
+    medianBlur(src_gray,src_gray,3);
+    medianBlur(src_gray,src_gray,5);
+    //src_gray.convertTo(src_gray,-1,-1,255);
+    int value1=0,value2=0;
+    for(int h =0;h< src_gray.rows-2;h++)
+    {
+        for(int w=0;w<src_gray.cols;w++)
+        {
+            value1 = src_gray.at<uchar>(h+2,w) - src_gray.at<uchar>(h,w);
+            value2 = src_gray.at<uchar>(h,w) - src_gray.at<uchar>(h+2,w);
+            if(value1 > value2)
+                if(value1 < 15)
+                    src_gray.at<uchar>(h,w) =0;
+                else
+                    src_gray.at<uchar>(h,w) = 255;
+                else
+                    if(value2 < 15)
+                        src_gray.at<uchar>(h,w) = 0;
+                    else
+                        src_gray.at<uchar>(h,w) = 255;
+        }
+    }
+    ShowWindow((const char *)"src_gray", src_gray,300, HEIGHT * 2);
+    
+    threshold(src_gray,src_gray,125,1,THRESH_BINARY);
+    dilate(src_gray,src_gray,Mat(),Point(-1,-1),1);
+    erode(src_gray,src_gray,Mat(),Point(-1,-1),1);
+    component.clear();
+    IcvprCcaByTwoPass(src_gray, src_label) ;
+    ShowWindow((const char *)"src_label", src_label, 1000, HEIGHT * 4);
+    IcvprLabelColor(src_label,src_color) ;    
+    src_color.copyTo(showImg1);
+    src_color.copyTo(showImg2);
+    cvtColor(showImg1,showImg1,COLOR_BGR2GRAY);
+    cvtColor(showImg2,showImg2,COLOR_BGR2GRAY);
+    threshold(showImg2,showImg2,0,255,THRESH_BINARY);
+    ShowWindow((const char *)"showImg1", showImg1, 1000, HEIGHT * 2);
+    map<int, ALRect>::iterator iter;
+    vector<ALRect> roiic;
+    for(iter = component.begin(); iter != component.end(); iter++) {
+        int x = iter->second._ltx;
+        int y = iter->second._lty;
+		int ry = iter->second._rdy;
+        int width = iter->second._width;
+        int height = iter->second._height;
+        int count = iter->second._count;
+        int cy = HEIGHT / 2;
+        int cx = WIDTH / 4;
+        bool isShow =   count >= 80 &&  width > 80 && x < 100 && y >= 5 && ry <= HEIGHT-5? true : false;
+        char title[1000] ;
+        if(isShow) {
+            int newheight = height;
+            int newy = y;		
+            int piexnumbermax = 0;
+            cout << "oldcomponent ltx, lty, width, height, count : " << iter->second._ltx << ", " << iter->second._lty << ", " << iter->second._width << ", " << iter->second._height << ", " << iter->second._count << endl;
+            for(int i =y;i < y + height;i++)
+            {
+                int piexnumber=0;
+                for(int j = x;j< x + width;j++)
+                {
+                    if(showImg2.at<uchar>(i,j) == 255)
+                        piexnumber++;
+                }
+                if(piexnumber < (width/3))
+                {
+                    newheight--;
+                    for(int j = x;j< x + width;j++)
+                    {
+                        showImg2.at<uchar>(i,j) = 0;
+                    }
+                }
+            }
+            sprintf(title, "component : %d", iter->first);
+            cout << "newcomponent ltx, lty, width, height, count : " << iter->second._ltx << ", " << iter->second._lty << ", " << iter->second._width << ", " << iter->second._height << ", " << iter->second._count << endl;
+        }
+        else
+        {
+            for(int i = y; i < y + height; i++)
+            {
+                for(int j = x; j < x +width;j++)
+                {
+                    showImg1.at<uchar>(i,j) = 0;
+                    showImg2.at<uchar>(i,j) = 0;
+                }
+            }
+        }
+    }
+    ShowWindow((const char *)"showImg1", showImg1, 300, HEIGHT * 4);
+    ShowWindow((const char *)"showImg2", showImg2,300, HEIGHT * 6);
+    
+	component.clear();
+	threshold(showImg2,showImg2,125,1,THRESH_BINARY);
+    IcvprCcaByTwoPass(showImg2, src_label) ;
+	IcvprLabelColor(src_label,src_color) ;
+	ShowWindow((const char *)"showImg3", src_color, 1000, HEIGHT * 2);
+
+	for(iter = component.begin(); iter != component.end(); iter++) {
+        int x = iter->second._ltx;
+        int y = iter->second._lty;
+		int ry = iter->second._rdy;
+        int width = iter->second._width;
+        int height = iter->second._height;
+        int count = iter->second._count;
+        int cy = HEIGHT / 2;
+        int cx = WIDTH / 4;
+        bool isShow =   count >= 80 &&  width > 80 && x < 100 && y >= 5 && ry <= HEIGHT-5? true : false;
+        char title[1000] ;
+        if(isShow) {
+            int newheight = height;
+            int newy = y;		
+            int piexnumbermax = 0;
+			for(int i =y;i < y + height;i++)
+            {
+                int piexnumber=0;
+                for(int j = x;j< x + width;j++)
+                {
+                    if(showImg2.at<uchar>(i,j) == 255)
+                        piexnumber++;
+                }
+                if(piexnumber > piexnumbermax && y < HEIGHT/2 && newy < y)
+                {
+                    newy = y;
+					piexnumbermax = piexnumber;
+                }
+				if(piexnumber > piexnumbermax && y > HEIGHT/2 && newy > y)
+				{
+					newy = y;
+					piexnumbermax = piexnumber;
+				}
+
+            }
+			iter->second.SetLty(newy);
+            cout << "oldcomponent ltx, lty, width, height, count : " << iter->second._ltx << ", " << iter->second._lty << ", " << iter->second._width << ", " << iter->second._height << ", " << iter->second._count << endl;
+            roiic.push_back(iter->second);
+            sprintf(title, "component : %d", iter->first);
+        }
+    }
+    int roitopy = 0,roibottomy= HEIGHT,roitopindex =-1,roibottomindex =-1;
+    for(int i = 0;i < roiic.size();i++)
+    {
+        if(roiic[i]._lty < HEIGHT/2 && roitopy < roiic[i]._lty)
+        {
+            roitopy = roiic[i]._lty;
+            roitopindex = i;
+        }
+        else if(roiic[i]._lty > HEIGHT/2 && roibottomy > roiic[i]._lty)
+        {
+            roibottomy = roiic[i]._lty;
+            roibottomindex = i;
+        }
+    }
+    if(roitopindex == -1 || roibottomindex == -1)
+	{
+		return false;
+	}
+	component.clear();
+    cout << "top component ltx, lty, width, height : " << roiic[roitopindex]._ltx << ", " << roiic[roitopindex]._lty << ", " << roiic[roitopindex]._width << ", " << roiic[roitopindex]._height  << endl;
+    cout << "bottom component ltx, lty, width, height : " << roiic[roibottomindex]._ltx << ", " << roiic[roibottomindex]._lty << ", " << roiic[roibottomindex]._width << ", " << roiic[roibottomindex]._height  << endl;
+    
+    Mat roi;
+    if(roiic.size() >=2 && roitopindex >= 0 && roibottomindex >= 0)
+    {
+		int x = roiic[roitopindex]._ltx;
+		int y = roiic[roitopindex]._lty;
+		int height =  roiic[roibottomindex]._rdy - y ;
+		int width = roiic[roitopindex]._width;
+		if(width < roiic[roibottomindex]._width)
+        {
+            x = roiic[roibottomindex]._ltx;
+            width = roiic[roibottomindex]._width;
+		}
+
+        cout << "component ltx, lty, width, height : " << x << ", " << y << ", " << width << ", " << height  << endl;
+        
+        ROILTX = x;
+        ROILTY = y;
+        ROIRDX = x + width;
+        ROIRDY = y + height;
+        _roiImg = _srcImg( Rect(x,y,width,height) );
+        ShowWindow((const char *)"src_roi", _roiImg,300, HEIGHT * 2);
+        return true;
+    } else {
+        _roiImg = _srcImg;
+        return false;
+    }
+}

@@ -149,8 +149,6 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
     labelImg.convertTo(grayImg, CV_8UC1) ;
     ShowWindow((const char *)"labelImg", grayImg, WIDTH * 2, HEIGHT * 2);
     
-    /*CvSVM svm;
-     svm.load("D:\\OCR\\digital-recognize\\demon\\gas.xml");*/
     Mat trainTempImg= Mat(Size(48,48),8,3);
     trainTempImg.setTo(Scalar::all(0));
     int counts = 0;
@@ -541,7 +539,7 @@ bool FindROI(const Mat& _srcImg,Mat& _roiImg)
     Mat src_gray,src_label,src_color,showImg1,showImg2;
     _srcImg.copyTo(src_gray);
     cvtColor(src_gray,src_gray,COLOR_BGR2GRAY);
-    equalizeHist(src_gray,src_gray);
+    //equalizeHist(src_gray,src_gray);
     medianBlur(src_gray,src_gray,3);
     medianBlur(src_gray,src_gray,5);
     //src_gray.convertTo(src_gray,-1,-1,255);
@@ -662,7 +660,7 @@ bool FindROI(const Mat& _srcImg,Mat& _roiImg)
     ShowWindow((const char *)"showImg2", showImg2,300, HEIGHT * 6);
     component.clear();
     
-    int roitopy = 0,roibottomy= HEIGHT,roitopindex =0,roibottomindex =0;
+    int roitopy = 0,roibottomy= HEIGHT,roitopindex =-1,roibottomindex =-1;
     for(int i = 0;i < roiic.size();i++)
     {
         if(roiic[i]._lty < HEIGHT/2 && roitopy < roiic[i]._lty )
@@ -676,7 +674,11 @@ bool FindROI(const Mat& _srcImg,Mat& _roiImg)
             roibottomindex = i;
         }
     }
-    
+    if(roitopindex == -1 || roibottomindex == -1)
+	{
+		return false;
+	}
+
     cout << "top component ltx, lty, width, height : " << roiic[roitopindex]._ltx << ", " << roiic[roitopindex]._lty << ", " << roiic[roitopindex]._width << ", " << roiic[roitopindex]._height  << endl;
     cout << "bottom component ltx, lty, width, height : " << roiic[roibottomindex]._ltx << ", " << roiic[roibottomindex]._lty << ", " << roiic[roibottomindex]._width << ", " << roiic[roibottomindex]._height  << endl;
     
@@ -699,7 +701,8 @@ bool FindROI(const Mat& _srcImg,Mat& _roiImg)
 			else
 				width = roiic[roibottomindex]._width;
 		}
-
+		if(x + width >= WIDTH)
+			width  -= 20;
 
         cout << "component ltx, lty, width, height : " << x << ", " << y << ", " << width << ", " << height  << endl;
         

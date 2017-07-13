@@ -23,10 +23,8 @@
 using namespace cv;
 using namespace std;
 
-int WIDTH = 320, HEIGHT = 140;
+const int WIDTH = 320, HEIGHT = 140;
 map<int, ALRect> component;
-vector<ALRect> numeric;
-CvSVM svm;
 
 void IcvprCcaByTwoPass(const Mat& _binImg, Mat& _lableImg);
 Scalar IcvprGetRandomColor();
@@ -43,12 +41,20 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
 #ifdef SHOWWINDOW
     srand(time(NULL));
 #endif
+    vector<ALRect> numeric;
+    CvSVM svm;
+    
     static unsigned char result[7] = {0};
     component.clear();
-    numeric.clear();
     memset( result, 0, 7 * sizeof(unsigned char) );
     result[0] = 1;
     svm.load(svmFilePath);
+    
+    if(svm.get_var_count() == 0) {
+        result[0] = 2;
+        return result;
+    }
+    
     Mat src_gray,dst,thres,src_down;
     Mat src = Mat(HEIGHT, WIDTH, CV_8UC3, imageBuf);
     short numericMax = SetNumericMax(type);
@@ -56,17 +62,6 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
     
     cvtColor(src,src_gray,COLOR_BGR2GRAY);
     cvtColor(src,src_down,COLOR_BGR2GRAY);
-	
-    int histSize = 256;
-    float rang[] = {0,255};
-    const float* histRange = {rang};
-    Mat histImg;
-	equalizeHist(src_gray, histImg);
-    calcHist(&src_gray,1,0,Mat(),histImg,1,&histSize,&histRange);
-    
-    Mat showHistImg(256,256,CV_8UC1,Scalar(255));
-    drawHistImg(histImg,showHistImg);
-    ShowWindow((const char *)"srcHistimg", showHistImg, 0, HEIGHT * 1.5);
     
     Mat numbricROI = src_gray;
     int makeup = 0;
@@ -74,12 +69,21 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
     
     switch(type) {
         case 1:
-        case 5:
+        case 211:
         case 4:
+        case 321:
+        case 5:
+        case 322:
         case 6:
-        case 11:
-        case 12:
+        case 331:
         case 9:
+        case 431:
+        case 11:
+        case 511:
+        case 12:
+        case 512:
+        case 15:
+        case 611:
             break;
         default:
             dilate(src_gray,src_gray,Mat(),Point(-1,-1),1);
@@ -197,7 +201,6 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
         addWeighted(roi2,0,roi,1,0,roi2);
         
 #ifdef SHOWWINDOW
-
         getcwd(title, 1000);
         GetCurrentDir(title, 1000);
         sprintf(title, "%s/train/tmp/%d_%d.bmp", title, type, rand());

@@ -23,9 +23,10 @@
 using namespace cv;
 using namespace std;
 
-static unsigned char result[7] = {0};
-const int WIDTH = 320, HEIGHT = 140;
+int WIDTH = 320, HEIGHT = 140;
 map<int, ALRect> component;
+vector<ALRect> numeric;
+CvSVM svm;
 
 void IcvprCcaByTwoPass(const Mat& _binImg, Mat& _lableImg);
 Scalar IcvprGetRandomColor();
@@ -42,20 +43,12 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
 #ifdef SHOWWINDOW
     srand(time(NULL));
 #endif
-    CvSVM svm;
-    svm.load(svmFilePath);
-    
-    vector<ALRect> numeric;
+    static unsigned char result[7] = {0};
     component.clear();
-    
+    numeric.clear();
     memset( result, 0, 7 * sizeof(unsigned char) );
     result[0] = 1;
-    
-    if(svm.get_var_count() == 0) {
-        result[0] = 2;
-        return result;
-    }
-    
+    svm.load(svmFilePath);
     Mat src_gray,dst,thres,src_down;
     Mat src = Mat(HEIGHT, WIDTH, CV_8UC3, imageBuf);
     short numericMax = SetNumericMax(type);
@@ -63,31 +56,38 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
     
     cvtColor(src,src_gray,COLOR_BGR2GRAY);
     cvtColor(src,src_down,COLOR_BGR2GRAY);
+	
+    int histSize = 256;
+    float rang[] = {0,255};
+    const float* histRange = {rang};
+    Mat histImg;
+	equalizeHist(src_gray, histImg);
+    calcHist(&src_gray,1,0,Mat(),histImg,1,&histSize,&histRange);
+    
+    Mat showHistImg(256,256,CV_8UC1,Scalar(255));
+    drawHistImg(histImg,showHistImg);
+    ShowWindow((const char *)"srcHistimg", showHistImg, 0, HEIGHT * 1.5);
     
     Mat numbricROI = src_gray;
     int makeup = 0;
     bool bFindROI = FindROI(src, numbricROI);
+    bFindROI = true;
     
     switch(type) {
         case 1:
-        case 211:
-        case 4:
-        case 321:
         case 5:
-        case 322:
+        case 4:
         case 6:
-        case 331:
-        case 9:
-        case 431:
         case 11:
-        case 511:
         case 12:
-        case 512:
-        case 15:
-        case 611:
+		case 9:
             break;
         default:
-            dilate(src_gray,src_gray,Mat(),Point(-1,-1),1);
+            dilate(src_gray,src_gray,Mat(),Point(-1,-1),1); //膨脹
+    }
+    if(!bFindROI) {
+        makeup = -29;
+        numbricROI = src_gray;
     }
     
     ShowWindow((const char *)"Grayimage", src_gray, 0, 0);
@@ -164,7 +164,21 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
     trainTempImg.setTo(Scalar::all(0));
     int counts = 0;
     map<int, ALRect>::iterator iter;
-    
+
+    if(!bFindROI) {
+        for(iter = component.begin(); iter != component.end(); iter++) {
+            int x = iter->second._ltx;
+            int y = iter->second._lty;
+            int width = iter->second._width;
+            int height = iter->second._height;
+            int count = iter->second._count;
+            if(width > WIDTH / 2) {
+                ROILTX = x;
+                ROIRDX = x + width;
+                break;
+            }
+        }
+    }
     printf("ROI X RANGE : %d, %d\n", ROILTX, ROIRDX);
     
     for(iter = component.begin(); iter != component.end(); iter++) {
@@ -174,7 +188,7 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
         int height = iter->second._height;
         int count = iter->second._count;
         int cy = HEIGHT / 2;
-        bool isShow =  y <= cy+1 && y + height >= cy && count >= 25 && count <= 760 && height >=11 && height <= 46 && width >= 3 && width < 46 && x >= ROILTX && x + width <= ROIRDX + 5 ? true : false;
+        bool isShow = y <= cy + 3 && y + height >= cy && count >= 25 && count <= 760 && height >=11 && height <= 46 && width >= 3 && width < 46 && x >= ROILTX && x + width <= ROIRDX + 5 ? true : false;
         char title[1000] ;
         cout << "source component ltx, lty, width, height, count : " << iter->second._ltx << ", " << iter->second._lty << ", " << iter->second._width << ", " << iter->second._height << ", " << iter->second._count << endl;
         if(isShow) {
@@ -182,7 +196,8 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
             sprintf(title, "component : %d", iter->first);
             cout << "component ltx, lty, width, height, count : " << iter->second._ltx << ", " << iter->second._lty << ", " << iter->second._width << ", " << iter->second._height << ", " << iter->second._count << endl;
             Mat roi = src_down( Rect(iter->second._ltx,iter->second._lty,iter->second._width,iter->second._height) );
-			ShowWindow(title, roi, WIDTH * 4, 0 + roi.rows * ((counts++) * 3));
+			ShowWindow(title, roi, WIDTH * 2, 0 + roi.rows * ((counts++) * 3));
+
         }
     }
     
@@ -201,13 +216,23 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
         Mat roi2 = trainRoi(Rect(x,y,roi.cols,roi.rows));
         addWeighted(roi2,0,roi,1,0,roi2);
         
-#ifdef SHOWWINDOW
+
+//#ifdef SHOWWINDOW
         getcwd(title, 1000);
         GetCurrentDir(title, 1000);
-        sprintf(title, "%s/train/tmp/%d_%d.bmp", title, type, rand());
+        sprintf(title, "%s\\train\\tmp\\%d_%d.bmp", title, type, rand());
         ShowWindow(title, trainRoi, WIDTH * 1.5, 0 + trainRoi.rows * ((i) * 2 ));
-        imwrite(title, trainRoi);
-#endif
+		imwrite(title, trainRoi);
+
+		//Mat roi3=Mat(48, 48, CV_8U, Scalar(0));
+		//Mat roi4 = Mat(48, 48, CV_8U, Scalar(0));
+		//sprintf(title, "%s\\train\\tmp\\%d_%d.bmp", title, type, rand());
+		////blur(trainRoi, roi3, Size(3, 3));
+		//bilateralFilter(trainRoi, roi4,1,3,1.5 );
+		//ShowWindow(title, roi4, WIDTH * 1.5, 0 + trainRoi.rows * ((i) * 2));
+		//imwrite(title, roi4);
+
+//#endif
         
         HOGDescriptor *hog= new HOGDescriptor (cvSize(48,48),cvSize(24,24),cvSize(12,12),cvSize(6,6),9);
         vector<float> descriptors;
@@ -233,7 +258,7 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
     
     Mat colorLabelImg ;
     IcvprLabelColor(labelImg, colorLabelImg) ;
-    ShowWindow((const char *)"colorImg", colorLabelImg, WIDTH * 2, 0 + HEIGHT * 4);
+    ShowWindow((const char *)"colorImg", colorLabelImg, WIDTH * 2, 0 + HEIGHT * 4); //***
     
     printf("result: %c, %c, %c, %c, %c, %d \n", result[1], result[2], result[3], result[4], result[5], result[6]);
     
@@ -492,6 +517,12 @@ short SetNumericMax(int type) {
         case 622:
             return 4;
             break;
+		case 18:
+			return 5;
+			break;
+		case 19:
+			return 5;
+			break;
         default:
             return 4;
     }
@@ -701,11 +732,20 @@ bool FindROI(const Mat& _srcImg,Mat& _roiImg)
 		int y = roiic[roitopindex]._lty;
 		int height =  roiic[roibottomindex]._rdy - y ;
 		int width = roiic[roitopindex]._width;
-		if(width < roiic[roibottomindex]._width)
-        {
-            x = roiic[roibottomindex]._ltx;
-            width = roiic[roibottomindex]._width;
+		if(width > roiic[roibottomindex]._width)
+		{
+			if(width >  WIDTH/2)
+				width = (roiic[roitopindex]._width + roiic[roibottomindex]._width)/2;
 		}
+		else
+		{
+			if(roiic[roibottomindex]._width >  WIDTH/2)
+				width = (roiic[roitopindex]._width + roiic[roibottomindex]._width)/2;
+			else
+				width = roiic[roibottomindex]._width;
+		}
+		if(x + width >= WIDTH)
+			width  -= 20;
 
         cout << "component ltx, lty, width, height : " << x << ", " << y << ", " << width << ", " << height  << endl;
         

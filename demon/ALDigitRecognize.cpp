@@ -150,7 +150,8 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
     threshold(src_down,src_down,T + makeup,255,THRESH_BINARY);    
     ShowWindow((const char *)"ALthreshold", dst, WIDTH * 2, 0);
     ShowWindow((const char *)"src_down", src_down, WIDTH * 1, 0);
-    
+	ShowWindow((const char *)"thres", thres, WIDTH * 2, 0);
+
     Mat labelImg ;
     IcvprCcaByTwoPass(thres, labelImg) ;
     
@@ -181,6 +182,8 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
     }
     printf("ROI X RANGE : %d, %d\n", ROILTX, ROIRDX);
     
+	int j = 0;
+
     for(iter = component.begin(); iter != component.end(); iter++) {
         int x = iter->second._ltx;
         int y = iter->second._lty;
@@ -198,11 +201,29 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
             Mat roi = src_down( Rect(iter->second._ltx,iter->second._lty,iter->second._width,iter->second._height) );
 			ShowWindow(title, roi, WIDTH * 2, 0 + roi.rows * ((counts++) * 3));
 
+			
+			/*threshold(roi, thres, 125, 255, THRESH_BINARY);
+			ShowWindow((const char *)"labelImg2" + i, thres, WIDTH * 2, HEIGHT * 2);
+			i++;*/
+			/*Mat labelImg2;
+			IcvprCcaByTwoPass(thres, labelImg2);
+			Mat grayImg2;
+			labelImg2 *= 10;
+			labelImg2.convertTo(grayImg2, CV_8UC1);
+			ShowWindow((const char *)"labelImg2" + i, grayImg2, WIDTH * 2, HEIGHT * 2);*/
+
+			/*Mat grayImg2;
+			labelImg *= 10;
+			labelImg.convertTo(grayImg2, CV_8UC1);
+			ShowWindow((const char *)"labelImg2" + i, grayImg, WIDTH * 2, HEIGHT * 2);
+			l*/
         }
     }
     
     //
     sort(numeric.begin(),numeric.end(),SortLtx);
+
+	
     
     for(int i=0; i<numeric.size(); i++) {
         char title[1000] ;
@@ -215,7 +236,14 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
         int y = (trainRoi.cols /2)-( numeric[i]._height/2);
         Mat roi2 = trainRoi(Rect(x,y,roi.cols,roi.rows));
         addWeighted(roi2,0,roi,1,0,roi2);
-        
+
+
+		//Mat trainRoia = Mat(48, 48, CV_8U, Scalar(0));
+		//threshold(trainRoi, trainRoia, 250, 255, THRESH_BINARY);
+		//Mat labelImg2 = Mat(48, 48, CV_8U, Scalar(0));
+		//IcvprCcaByTwoPass(trainRoia, labelImg2);
+		//ShowWindow("labelImg2" + i, labelImg2, WIDTH * 2, HEIGHT * 2);
+		//j++;
 
 //#ifdef SHOWWINDOW
         getcwd(title, 1000);
@@ -224,16 +252,10 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
         ShowWindow(title, trainRoi, WIDTH * 1.5, 0 + trainRoi.rows * ((i) * 2 ));
 		imwrite(title, trainRoi);
 
-		//Mat roi3=Mat(48, 48, CV_8U, Scalar(0));
-		//Mat roi4 = Mat(48, 48, CV_8U, Scalar(0));
-		//sprintf(title, "%s\\train\\tmp\\%d_%d.bmp", title, type, rand());
-		////blur(trainRoi, roi3, Size(3, 3));
-		//bilateralFilter(trainRoi, roi4,1,3,1.5 );
-		//ShowWindow(title, roi4, WIDTH * 1.5, 0 + trainRoi.rows * ((i) * 2));
-		//imwrite(title, roi4);
-
 //#endif
-        
+
+
+
         HOGDescriptor *hog= new HOGDescriptor (cvSize(48,48),cvSize(24,24),cvSize(12,12),cvSize(6,6),9);
         vector<float> descriptors;
         hog->compute(trainRoi,descriptors,Size(1,1),Size(0,0));
@@ -518,9 +540,12 @@ short SetNumericMax(int type) {
             return 4;
             break;
 		case 18:
+		case 451:
 			return 5;
 			break;
 		case 19:
+		case 631:
+		case 632:
 			return 5;
 			break;
         default:

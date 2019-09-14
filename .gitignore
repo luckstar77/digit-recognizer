@@ -321,10 +321,4 @@ __pycache__/
 *.xsd.cs
 
 # Other
-*.xcodeproj
-*.sdf
-*.sln
-*.vcxproj
-*.filters
-train/
 .DS_Store

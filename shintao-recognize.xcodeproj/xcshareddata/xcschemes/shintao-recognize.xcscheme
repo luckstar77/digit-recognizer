@@ -63,7 +63,7 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "/Users/allenlai/Work/shintaogas/code/shintao-recognize/demon/images/18.YL4S/56789.bmp"
+            argument = "/Users/allenlai/Work/shintaogas/code/shintao-recognize/demon/images/F10.QK4000A/00003F.bmp"
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
@@ -71,7 +71,7 @@
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "18"
+            argument = "10"
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument

@@ -85,6 +85,12 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
         case 512:
         case 15:
         case 611:
+		case 18:
+		case 451:
+		case 19:
+		case 631:
+		case 20:
+		case 632:
             break;
         default:
             dilate(src_gray,src_gray,Mat(),Point(-1,-1),1);
@@ -492,6 +498,18 @@ short SetNumericMax(int type) {
         case 622:
             return 4;
             break;
+		case 18:
+		case 451:
+			return 5;
+			break;
+		case 19:
+		case 631:
+			return 5;
+			break;
+		case 20:
+		case 632:
+			return 5;
+			break;
         default:
             return 4;
     }

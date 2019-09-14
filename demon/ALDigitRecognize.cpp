@@ -180,7 +180,7 @@ unsigned char *ALDigitRecognize(int type, unsigned char *imageBuf, char *svmFile
         int height = iter->second._height;
         int count = iter->second._count;
         int cy = HEIGHT / 2;
-        bool isShow =  y <= cy+1 && y + height >= cy && count >= 25 && count <= 760 && height >=11 && height <= 46 && width >= 3 && width < 46 && x >= ROILTX && x + width <= ROIRDX + 5 ? true : false;
+        bool isShow =  y <= cy+4 && y + height >= cy && count >= 25 && count <= 760 && height >=11 && height <= 46 && width >= 3 && width < 46 && x >= ROILTX && x + width <= ROIRDX + 5 ? true : false;
         char title[1000] ;
         cout << "source component ltx, lty, width, height, count : " << iter->second._ltx << ", " << iter->second._lty << ", " << iter->second._width << ", " << iter->second._height << ", " << iter->second._count << endl;
         if(isShow) {
